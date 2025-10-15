@@ -20,7 +20,22 @@
     </div>
 
     <div id="login-view" class="hidden w-full max-w-sm mx-auto mt-20">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="login-email" class="block mb-2 text-sm font-medium text-gray-300">Email</label>
+                    <input type="email" id="login-email" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                </div>
+                <div class="mb-6">
+                    <label for="login-password" class="block mb-2 text-sm font-medium text-gray-300">Contraseña</label>
+                    <input type="password" id="login-password" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Entrar</button>
+                <p id="login-error" class="text-red-500 text-center mt-4"></p>
+            </form>
         </div>
+    </div>
 
     <div id="app-container" class="hidden w-full max-w-6xl mx-auto">
         <header class="flex justify-between items-center mb-6">
@@ -34,7 +49,7 @@
         <main>
             <section id="main-menu-view" class="view">
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 text-center">
-                    <div data-view="members-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                <div data-view="socios" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
                         <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         <h2 class="text-xl font-semibold">Socios</h2>
                     </div>
@@ -57,13 +72,25 @@
                 </div>
             </section>
 
-            <section id="members-view" class="view hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold">Gestión de Socios</h2>
-                    <button id="show-add-member-modal" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Socio</button>
+            <section id="socios" class="view hidden">
+                <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+                    <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                            <tr>
+                                <th scope="col" class="py-3 px-6">Nombre</th>
+                                <th scope="col" class="py-3 px-6">Apellido</th>
+                                <th scope="col" class="py-3 px-6">Estado</th>
+                                <th scope="col" class="py-3 px-6">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="socios-list">
+                            <!-- Los socios se renderizarán aquí -->
+                        </tbody>
+                    </table>
                 </div>
-                <div id="members-list" class="space-y-3">
-                    </div>
+                <button id="show-add-socio-modal" class="fixed bottom-10 right-10 bg-blue-600 hover:bg-blue-700 text-white font-bold w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-3xl">
+                    +
+                </button>
             </section>
             
             <section id="articles-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Gestión de Artículos</h2><p class="text-gray-400">Próximamente...</p></section>
@@ -80,118 +107,25 @@
         </main>
     </div>
     
-    <div id="add-member-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4">
-        </div>
-
-    <script type="module">
-        // ...
-    </script>
-</body>
-
-    <!-- Vista Principal de la App (Contenedor de Vistas) -->
-    <div id="app-container" class="hidden w-full max-w-6xl mx-auto">
-    <header class="flex justify-between items-center mb-6">
-        <h1 id="view-title" class="text-3xl font-bold">Menú Principal</h1>
-        <div>
-            <button id="back-to-menu" class="hidden bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg mr-4">← Volver</button>
-            <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cerrar Sesión</button>
-        </div>
-    </header>
-
-    <main>
-        <section id="main-menu-view" class="view">
-            </section>
-
-        <section id="members-view" class="view hidden">
-            </section>
-        
-        <section id="articles-view" class="view hidden">
-            </section>
-
-        </main>
-    </div>
-
-        <!-- Vista del Menú Principal con Iconos -->
-        <main id="main-menu-view" class="view">
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 text-center">
-                <!-- Socios -->
-                <div data-view="members-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
-                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    <h2 class="text-xl font-semibold">Socios</h2>
-                </div>
-                <!-- Artículos -->
-                <div data-view="articles-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
-                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
-                    <h2 class="text-xl font-semibold">Artículos</h2>
-                </div>
-                <!-- TPV -->
-                <div data-view="tpv-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
-                     <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                    <h2 class="text-xl font-semibold">TPV</h2>
-                </div>
-                <!-- Estadísticas -->
-                <div data-view="stats-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
-                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    <h2 class="text-xl font-semibold">Estadísticas</h2>
-                </div>
-                <!-- Historial -->
-                <div data-view="history-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
-                     <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <h2 class="text-xl font-semibold">Historial</h2>
-                </div>
-            </div>
-        </main>
-
-        <!-- Vista de Socios -->
-        <main id="members-view" class="view hidden">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold">Gestión de Socios</h2>
-                <button id="show-add-member-modal" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Socio</button>
-            </div>
-            <div id="members-list" class="space-y-3">
-                <!-- Los socios se renderizarán aquí -->
-            </div>
-        </main>
-        
-        <!-- Otras vistas como placeholders -->
-        <main id="articles-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Gestión de Artículos</h2><p class="text-gray-400">Próximamente...</p></main>
-        <main id="tpv-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Terminal Punto de Venta (TPV)</h2><p class="text-gray-400">Próximamente...</p></main>
-        <main id="stats-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Estadísticas</h2><p class="text-gray-400">Próximamente...</p></main>
-        
-        <!-- Vista de Historial -->
-        <main id="history-view" class="view hidden">
-             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold">Historial de Cambios</h2>
-            </div>
-            <div id="logs-list" class="space-y-2 text-sm">
-                <!-- Los logs se insertarán aquí -->
-            </div>
-        </main>
-    </div>
-    
-    <!-- Modal para Añadir Socio -->
-    <div id="add-member-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4">
+    <div id="add-socio-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4">
         <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-4">Nuevo Socio</h2>
-            <form id="add-member-form">
+            <h2 class="text-2xl font-bold mb-4">Añadir Socio</h2>
+            <form id="add-socio-form">
                 <div class="mb-4">
-                    <label class="block">Nombre</label>
-                    <input type="text" id="member-firstname" required class="w-full p-2 bg-gray-700 rounded">
+                    <label for="socio-nombre" class="block mb-2 text-sm font-medium text-gray-300">Nombre</label>
+                    <input type="text" id="socio-nombre" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                 </div>
                 <div class="mb-4">
-                    <label class="block">Apellido</label>
-                    <input type="text" id="member-lastname" required class="w-full p-2 bg-gray-700 rounded">
-                </div>
-                 <div class="mb-4">
-                    <label class="block">Foto del ID</label>
-                    <input type="file" id="member-id-photo" required accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <label for="socio-apellido" class="block mb-2 text-sm font-medium text-gray-300">Apellido</label>
+                    <input type="text" id="socio-apellido" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                 </div>
                 <div class="mb-4">
-                    <img id="photo-preview" src="" alt="Vista previa de la foto" class="hidden rounded-lg max-h-40 mx-auto"/>
+                    <label for="socio-id-photo" class="block mb-2 text-sm font-medium text-gray-300">Foto del ID</label>
+                    <input type="file" id="socio-id-photo" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                 </div>
                 <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancel-add-member" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded">Cancelar</button>
-                    <button type="submit" id="submit-add-member" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded">Guardar</button>
+                    <button type="button" id="cancel-add-socio" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded">Guardar</button>
                 </div>
             </form>
         </div>
@@ -285,7 +219,7 @@
                 loginView.classList.add('hidden');
                 appContainer.classList.remove('hidden');
                 showView('main-menu-view');
-                listenToMembers();
+                listenToSocios();
                 listenToLogs();
             } else {
                 currentUser = null;
@@ -311,146 +245,130 @@
         logoutButton.addEventListener('click', () => signOut(auth));
         
         // --- MÓDULO DE SOCIOS ---
-        const membersList = document.getElementById('members-list');
-        const addMemberModal = document.getElementById('add-member-modal');
-        const addMemberForm = document.getElementById('add-member-form');
-        const photoPreview = document.getElementById('photo-preview');
-        const memberIdPhotoInput = document.getElementById('member-id-photo');
+        const sociosList = document.getElementById('socios-list');
+        const addSocioModal = document.getElementById('add-socio-modal');
+        const addSocioForm = document.getElementById('add-socio-form');
+        const socioIdPhotoInput = document.getElementById('socio-id-photo');
 
-        function listenToMembers() {
-            const q = query(collection(db, "members"), orderBy("lastName", "asc"));
+        function getSociosCollectionRef() {
+            if (!currentUser || !firebaseConfig.appId) {
+                console.error("User not logged in or appId not configured");
+                return null;
+            }
+            return collection(db, `artifacts/${firebaseConfig.appId}/users/${currentUser.uid}/socios`);
+        }
+
+        function listenToSocios() {
+            const sociosCollectionRef = getSociosCollectionRef();
+            if (!sociosCollectionRef) return;
+
+            const q = query(sociosCollectionRef, orderBy("apellido", "asc"));
             onSnapshot(q, (snapshot) => {
-                membersList.innerHTML = '';
-                 if(snapshot.empty) {
-                    membersList.innerHTML = '<p class="text-gray-500 text-center">No hay socios registrados.</p>';
+                sociosList.innerHTML = '';
+                if (snapshot.empty) {
+                    sociosList.innerHTML = '<tr><td colspan="4" class="py-4 px-6 text-center text-gray-500">No hay socios registrados.</td></tr>';
                     return;
                 }
                 snapshot.forEach(doc => {
-                    const member = doc.data();
-                    const statusStyles = {
-                        paid: { color: 'bg-green-500', text: 'Pagado' },
-                        expired: { color: 'bg-gray-500', text: 'Caducado' },
-                        non_grata: { color: 'bg-red-500', text: 'Non Grata' }
+                    const socio = doc.data();
+                    const hoy = new Date();
+                    let estadoFinal = socio.estado;
+                    let filaClass = '';
+
+                    if (socio.estado === 'Verde' && socio.fecha_caducidad_pago && socio.fecha_caducidad_pago.toDate() < hoy) {
+                        estadoFinal = 'Gris';
+                        filaClass = 'bg-yellow-900'; // Highlight expired
+                    }
+
+                    const statusInfo = {
+                        'Gris': { color: 'bg-gray-500', text: 'Pendiente' },
+                        'Rojo': { color: 'bg-red-500', text: 'Non Grata' },
+                        'Verde': { color: 'bg-green-500', text: 'Pagado' }
                     };
-                    const currentStatus = statusStyles[member.status] || statusStyles.expired;
-                    const memberSinceDate = member.memberSince?.toDate().toLocaleDateString('es-ES') || 'N/A';
-                    const paymentDate = member.paymentDate?.toDate().toLocaleDateString('es-ES');
-                    
-                    const memberElement = `
-                        <div class="bg-gray-800 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-4">
-                            <div class="flex-1 text-center sm:text-left">
-                                <h3 class="font-bold text-lg">${member.firstName} ${member.lastName}</h3>
-                                <p class="text-sm text-gray-400">Miembro desde: ${memberSinceDate}</p>
-                                ${paymentDate ? `<p class="text-sm text-green-400">Último pago: ${paymentDate}</p>` : ''}
-                            </div>
-                            <div class="flex items-center space-x-3">
-                                <a href="${member.idPhotoUrl}" target="_blank" class="text-blue-400 hover:underline">Ver DNI</a>
-                                <button data-id="${doc.id}" data-status="${member.status}" class="change-status-btn w-28 text-center font-bold py-2 px-3 rounded-lg transition-colors ${currentStatus.color}">
+                    const currentStatus = statusInfo[estadoFinal];
+
+                    const socioElement = `
+                        <tr class="${filaClass} border-b border-gray-700">
+                            <td class="py-4 px-6">${socio.nombre}</td>
+                            <td class="py-4 px-6">${socio.apellido}</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 font-semibold leading-tight text-white rounded-full ${currentStatus.color}">
                                     ${currentStatus.text}
-                                </button>
-                            </div>
-                        </div>
+                                </span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <button data-id="${doc.id}" data-estado="${socio.estado}" class="change-status-btn text-blue-400 hover:underline">Cambiar Estado</button>
+                            </td>
+                        </tr>
                     `;
-                    membersList.innerHTML += memberElement;
+                    sociosList.innerHTML += socioElement;
                 });
             });
         }
-        
-        addMemberForm.addEventListener('submit', async (e) => {
+
+        addSocioForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const submitButton = document.getElementById('submit-add-member');
-            submitButton.disabled = true;
-            submitButton.textContent = 'Guardando...';
+            const nombre = document.getElementById('socio-nombre').value;
+            const apellido = document.getElementById('socio-apellido').value;
+            const file = socioIdPhotoInput.files[0];
 
-            const firstName = document.getElementById('member-firstname').value;
-            const lastName = document.getElementById('member-lastname').value;
-            const file = memberIdPhotoInput.files[0];
+            const newSocio = {
+                nombre,
+                apellido,
+                estado: 'Gris',
+                fecha_ingreso: serverTimestamp(),
+                fecha_caducidad_pago: null,
+            };
 
-            if (!file) {
-                alert("Por favor, selecciona una foto para el ID.");
-                submitButton.disabled = false;
-                submitButton.textContent = 'Guardar';
-                return;
-            }
+            const sociosCollectionRef = getSociosCollectionRef();
+            if (!sociosCollectionRef) return;
 
-            try {
-                const storageRef = ref(storage, `member_ids/${Date.now()}_${file.name}`);
-                const snapshot = await uploadBytes(storageRef, file);
-                const downloadURL = await getDownloadURL(snapshot.ref);
+            const docRef = await addDoc(sociosCollectionRef, newSocio);
 
-                const newMember = {
-                    firstName,
-                    lastName,
-                    idPhotoUrl: downloadURL,
-                    status: 'expired',
-                    paymentDate: null,
-                    memberSince: serverTimestamp()
-                };
-                const docRef = await addDoc(collection(db, "members"), newMember);
-                await logAction(`Creó al socio ${firstName} ${lastName} (ID: ${docRef.id}).`);
-
-                addMemberForm.reset();
-                photoPreview.classList.add('hidden');
-                addMemberModal.classList.add('hidden');
-
-            } catch (error) {
-                console.error("Error al añadir socio:", error);
-                alert("Hubo un error al guardar el nuevo socio.");
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Guardar';
-            }
-        });
-        
-        memberIdPhotoInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    photoPreview.src = event.target.result;
-                    photoPreview.classList.remove('hidden');
+                const storageRef = ref(storage, `socios_id/${docRef.id}/${file.name}`);
+                await uploadBytes(storageRef, file);
+            }
+
+            addSocioForm.reset();
+            addSocioModal.classList.add('hidden');
+        });
+
+        sociosList.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('change-status-btn')) {
+                const socioId = e.target.dataset.id;
+                let currentEstado = e.target.dataset.estado;
+                let newEstado;
+                let fechaCaducidad = null;
+
+                if (currentEstado === 'Gris') {
+                    newEstado = 'Verde';
+                    const futureDate = new Date();
+                    futureDate.setDate(futureDate.getDate() + 365);
+                    fechaCaducidad = futureDate;
+                } else if (currentEstado === 'Verde') {
+                    newEstado = 'Rojo';
+                } else { // Rojo
+                    newEstado = 'Gris';
                 }
-                reader.readAsDataURL(file);
-            } else {
-                photoPreview.classList.add('hidden');
+
+                const sociosCollectionRef = getSociosCollectionRef();
+                if (!sociosCollectionRef) return;
+
+                const socioRef = doc(sociosCollectionRef, socioId);
+                await updateDoc(socioRef, {
+                    estado: newEstado,
+                    fecha_caducidad_pago: fechaCaducidad
+                });
             }
         });
 
-        // --- LÓGICA DE CAMBIO DE ESTADO (BLOQUE CORREGIDO) ---
-        membersList.addEventListener('click', async (e) => {
-            if(e.target.classList.contains('change-status-btn')) {
-                const memberId = e.target.dataset.id;
-                const currentStatus = e.target.dataset.status;
-                let newStatus;
-                
-                // Lógica de ciclo de estados: pagado -> caducado -> non_grata -> pagado ...
-                if (currentStatus === 'paid') {
-                    newStatus = 'expired';
-                } else if (currentStatus === 'expired') {
-                    newStatus = 'non_grata';
-                } else { // Si es 'non_grata' o cualquier otro estado, vuelve a 'paid'
-                    newStatus = 'paid';
-                }
-
-                const memberRef = doc(db, "members", memberId);
-                const dataToUpdate = { 
-                    status: newStatus,
-                    // Si el nuevo estado es 'pagado', actualizamos la fecha. Si no, la borramos.
-                    paymentDate: newStatus === 'paid' ? serverTimestamp() : null
-                };
-
-                await updateDoc(memberRef, dataToUpdate);
-                await logAction(`Cambió el estado del socio (ID: ${memberId}) a '${newStatus}'.`);
-            }
+        document.getElementById('show-add-socio-modal').addEventListener('click', () => addSocioModal.classList.remove('hidden'));
+        document.getElementById('cancel-add-socio').addEventListener('click', () => {
+            addSocioForm.reset();
+            addSocioModal.classList.add('hidden');
         });
-        
-        document.getElementById('show-add-member-modal').addEventListener('click', () => addMemberModal.classList.remove('hidden'));
-        document.getElementById('cancel-add-member').addEventListener('click', () => {
-             addMemberForm.reset();
-             photoPreview.classList.add('hidden');
-             addMemberModal.classList.add('hidden');
-        });
-        
+
         // --- MÓDULO DE HISTORIAL (LOGS) ---
         const logsList = document.getElementById('logs-list');
 
