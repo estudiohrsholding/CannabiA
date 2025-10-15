@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es" class="bg-gray-900 text-white">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor del Club v2</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hidden { display: none; }
+        .view { transition: opacity 0.3s ease-in-out; }
+    </style>
+</head>
+
+<body class="min-h-screen p-4 bg-gray-900">
+
+    <div id="loading-view" class="flex items-center justify-center h-screen">
+        <p class="text-xl">Cargando aplicación...</p>
+    </div>
+
+    <div id="login-view" class="hidden w-full max-w-sm mx-auto mt-20">
+        </div>
+
+    <div id="app-container" class="hidden w-full max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-6">
+            <h1 id="view-title" class="text-3xl font-bold">Menú Principal</h1>
+            <div>
+                <button id="back-to-menu" class="hidden bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg mr-4">← Volver</button>
+                <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <main>
+            <section id="main-menu-view" class="view">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 text-center">
+                    <div data-view="members-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <h2 class="text-xl font-semibold">Socios</h2>
+                    </div>
+                    <div data-view="articles-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                        <h2 class="text-xl font-semibold">Artículos</h2>
+                    </div>
+                    <div data-view="tpv-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        <h2 class="text-xl font-semibold">TPV</h2>
+                    </div>
+                    <div data-view="stats-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <h2 class="text-xl font-semibold">Estadísticas</h2>
+                    </div>
+                    <div data-view="history-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h2 class="text-xl font-semibold">Historial</h2>
+                    </div>
+                </div>
+            </section>
+
+            <section id="members-view" class="view hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Gestión de Socios</h2>
+                    <button id="show-add-member-modal" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Socio</button>
+                </div>
+                <div id="members-list" class="space-y-3">
+                    </div>
+            </section>
+            
+            <section id="articles-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Gestión de Artículos</h2><p class="text-gray-400">Próximamente...</p></section>
+            <section id="tpv-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Terminal Punto de Venta (TPV)</h2><p class="text-gray-400">Próximamente...</p></section>
+            <section id="stats-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Estadísticas</h2><p class="text-gray-400">Próximamente...</p></section>
+            
+            <section id="history-view" class="view hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Historial de Cambios</h2>
+                </div>
+                <div id="logs-list" class="space-y-2 text-sm">
+                    </div>
+            </section>
+        </main>
+    </div>
+    
+    <div id="add-member-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4">
+        </div>
+
+    <script type="module">
+        // ...
+    </script>
+</body>
+
+    <!-- Vista Principal de la App (Contenedor de Vistas) -->
+    <div id="app-container" class="hidden w-full max-w-6xl mx-auto">
+    <header class="flex justify-between items-center mb-6">
+        <h1 id="view-title" class="text-3xl font-bold">Menú Principal</h1>
+        <div>
+            <button id="back-to-menu" class="hidden bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg mr-4">← Volver</button>
+            <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="main-menu-view" class="view">
+            </section>
+
+        <section id="members-view" class="view hidden">
+            </section>
+        
+        <section id="articles-view" class="view hidden">
+            </section>
+
+        </main>
+    </div>
+
+        <!-- Vista del Menú Principal con Iconos -->
+        <main id="main-menu-view" class="view">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 text-center">
+                <!-- Socios -->
+                <div data-view="members-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <h2 class="text-xl font-semibold">Socios</h2>
+                </div>
+                <!-- Artículos -->
+                <div data-view="articles-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                    <h2 class="text-xl font-semibold">Artículos</h2>
+                </div>
+                <!-- TPV -->
+                <div data-view="tpv-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                     <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                    <h2 class="text-xl font-semibold">TPV</h2>
+                </div>
+                <!-- Estadísticas -->
+                <div data-view="stats-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    <h2 class="text-xl font-semibold">Estadísticas</h2>
+                </div>
+                <!-- Historial -->
+                <div data-view="history-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                     <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <h2 class="text-xl font-semibold">Historial</h2>
+                </div>
+            </div>
+        </main>
+
+        <!-- Vista de Socios -->
+        <main id="members-view" class="view hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Gestión de Socios</h2>
+                <button id="show-add-member-modal" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Socio</button>
+            </div>
+            <div id="members-list" class="space-y-3">
+                <!-- Los socios se renderizarán aquí -->
+            </div>
+        </main>
+        
+        <!-- Otras vistas como placeholders -->
+        <main id="articles-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Gestión de Artículos</h2><p class="text-gray-400">Próximamente...</p></main>
+        <main id="tpv-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Terminal Punto de Venta (TPV)</h2><p class="text-gray-400">Próximamente...</p></main>
+        <main id="stats-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Estadísticas</h2><p class="text-gray-400">Próximamente...</p></main>
+        
+        <!-- Vista de Historial -->
+        <main id="history-view" class="view hidden">
+             <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Historial de Cambios</h2>
+            </div>
+            <div id="logs-list" class="space-y-2 text-sm">
+                <!-- Los logs se insertarán aquí -->
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal para Añadir Socio -->
+    <div id="add-member-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-2xl font-bold mb-4">Nuevo Socio</h2>
+            <form id="add-member-form">
+                <div class="mb-4">
+                    <label class="block">Nombre</label>
+                    <input type="text" id="member-firstname" required class="w-full p-2 bg-gray-700 rounded">
+                </div>
+                <div class="mb-4">
+                    <label class="block">Apellido</label>
+                    <input type="text" id="member-lastname" required class="w-full p-2 bg-gray-700 rounded">
+                </div>
+                 <div class="mb-4">
+                    <label class="block">Foto del ID</label>
+                    <input type="file" id="member-id-photo" required accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                <div class="mb-4">
+                    <img id="photo-preview" src="" alt="Vista previa de la foto" class="hidden rounded-lg max-h-40 mx-auto"/>
+                </div>
+                <div class="flex justify-end space-x-4">
+                    <button type="button" id="cancel-add-member" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded">Cancelar</button>
+                    <button type="submit" id="submit-add-member" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <script type="module">
+        // Importa las funciones que necesitas de los SDKs de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
+
+        // ==========================================================================================
+        // 🔥 ¡ATENCIÓN! REEMPLAZA ESTE OBJETO CON TU CONFIGURACIÓN REAL DE FIREBASE
+        // Tu configuración la encuentras en: Consola de Firebase > Configuración del proyecto (⚙️)
+        // ==========================================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCIRk9Vip1J5Zc8xAeObsU6poc-J8lcj0",
+            authDomain: "cannabia-9dfe3.firebaseapp.com",
+            projectId: "cannabia-9dfe3",
+            storageBucket: "cannabia-9dfe3.firebasestorage.app",
+            messagingSenderId: "605207982385",
+            appId: "1:605207982385:web:58254637495b2b6d2bc010",
+            measurementId: "G-6M1WRYG1PS"
+        };
+
+        // --- Verificación de Configuración ---
+        // Esta comprobación te alertará si olvidas reemplazar la configuración de ejemplo.
+        if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("AIza...")) {
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center text-lg z-50';
+            warningDiv.textContent = "¡ERROR DE CONFIGURACIÓN! Reemplaza el objeto 'firebaseConfig' de ejemplo en index.html con el tuyo.";
+            document.body.prepend(warningDiv);
+            // Detenemos la ejecución para prevenir errores más complejos
+            throw new Error("Configuración de Firebase no válida o ausente.");
+        }
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+        
+        let currentUser = null;
+
+        // --- GESTIÓN DE VISTAS (BLOQUE CORREGIDO) ---
+        const views = document.querySelectorAll('.view');
+        const menuItems = document.querySelectorAll('.menu-item');
+        const viewTitle = document.getElementById('view-title');
+        const backToMenuBtn = document.getElementById('back-to-menu');
+        const loadingView = document.getElementById('loading-view');
+        const loginView = document.getElementById('login-view');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const logoutButton = document.getElementById('logout-button');
+
+        function showView(viewId) {
+            views.forEach(view => view.classList.add('hidden'));
+            const activeView = document.getElementById(viewId);
+            if (activeView) {
+                activeView.classList.remove('hidden');
+                
+                const isMenuView = viewId === 'main-menu-view';
+                backToMenuBtn.classList.toggle('hidden', isMenuView);
+                
+                if (isMenuView) {
+                    viewTitle.textContent = 'Menú Principal';
+                } else {
+                    viewTitle.textContent = activeView.querySelector('h2').textContent;
+                }
+            }
+        }
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const viewId = item.dataset.view;
+                showView(viewId);
+            });
+        });
+
+        backToMenuBtn.addEventListener('click', () => showView('main-menu-view'));
+
+        // --- LÓGICA DE AUTENTICACIÓN ---
+        setPersistence(auth, browserLocalPersistence);
+
+        onAuthStateChanged(auth, user => {
+            loadingView.classList.add('hidden');
+            if (user) {
+                currentUser = user;
+                loginView.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                showView('main-menu-view');
+                listenToMembers();
+                listenToLogs();
+            } else {
+                currentUser = null;
+                appContainer.classList.add('hidden');
+                loginView.classList.remove('hidden');
+            }
+        });
+        
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const loginError = document.getElementById('login-error');
+            loginError.textContent = '';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                loginError.textContent = 'Credenciales incorrectas.';
+                console.error("Login Error:", error);
+            }
+        });
+
+        logoutButton.addEventListener('click', () => signOut(auth));
+        
+        // --- MÓDULO DE SOCIOS ---
+        const membersList = document.getElementById('members-list');
+        const addMemberModal = document.getElementById('add-member-modal');
+        const addMemberForm = document.getElementById('add-member-form');
+        const photoPreview = document.getElementById('photo-preview');
+        const memberIdPhotoInput = document.getElementById('member-id-photo');
+
+        function listenToMembers() {
+            const q = query(collection(db, "members"), orderBy("lastName", "asc"));
+            onSnapshot(q, (snapshot) => {
+                membersList.innerHTML = '';
+                 if(snapshot.empty) {
+                    membersList.innerHTML = '<p class="text-gray-500 text-center">No hay socios registrados.</p>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const member = doc.data();
+                    const statusStyles = {
+                        paid: { color: 'bg-green-500', text: 'Pagado' },
+                        expired: { color: 'bg-gray-500', text: 'Caducado' },
+                        non_grata: { color: 'bg-red-500', text: 'Non Grata' }
+                    };
+                    const currentStatus = statusStyles[member.status] || statusStyles.expired;
+                    const memberSinceDate = member.memberSince?.toDate().toLocaleDateString('es-ES') || 'N/A';
+                    const paymentDate = member.paymentDate?.toDate().toLocaleDateString('es-ES');
+                    
+                    const memberElement = `
+                        <div class="bg-gray-800 p-4 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <div class="flex-1 text-center sm:text-left">
+                                <h3 class="font-bold text-lg">${member.firstName} ${member.lastName}</h3>
+                                <p class="text-sm text-gray-400">Miembro desde: ${memberSinceDate}</p>
+                                ${paymentDate ? `<p class="text-sm text-green-400">Último pago: ${paymentDate}</p>` : ''}
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <a href="${member.idPhotoUrl}" target="_blank" class="text-blue-400 hover:underline">Ver DNI</a>
+                                <button data-id="${doc.id}" data-status="${member.status}" class="change-status-btn w-28 text-center font-bold py-2 px-3 rounded-lg transition-colors ${currentStatus.color}">
+                                    ${currentStatus.text}
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    membersList.innerHTML += memberElement;
+                });
+            });
+        }
+        
+        addMemberForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const submitButton = document.getElementById('submit-add-member');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Guardando...';
+
+            const firstName = document.getElementById('member-firstname').value;
+            const lastName = document.getElementById('member-lastname').value;
+            const file = memberIdPhotoInput.files[0];
+
+            if (!file) {
+                alert("Por favor, selecciona una foto para el ID.");
+                submitButton.disabled = false;
+                submitButton.textContent = 'Guardar';
+                return;
+            }
+
+            try {
+                const storageRef = ref(storage, `member_ids/${Date.now()}_${file.name}`);
+                const snapshot = await uploadBytes(storageRef, file);
+                const downloadURL = await getDownloadURL(snapshot.ref);
+
+                const newMember = {
+                    firstName,
+                    lastName,
+                    idPhotoUrl: downloadURL,
+                    status: 'expired',
+                    paymentDate: null,
+                    memberSince: serverTimestamp()
+                };
+                const docRef = await addDoc(collection(db, "members"), newMember);
+                await logAction(`Creó al socio ${firstName} ${lastName} (ID: ${docRef.id}).`);
+
+                addMemberForm.reset();
+                photoPreview.classList.add('hidden');
+                addMemberModal.classList.add('hidden');
+
+            } catch (error) {
+                console.error("Error al añadir socio:", error);
+                alert("Hubo un error al guardar el nuevo socio.");
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Guardar';
+            }
+        });
+        
+        memberIdPhotoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    photoPreview.src = event.target.result;
+                    photoPreview.classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                photoPreview.classList.add('hidden');
+            }
+        });
+
+        // --- LÓGICA DE CAMBIO DE ESTADO (BLOQUE CORREGIDO) ---
+        membersList.addEventListener('click', async (e) => {
+            if(e.target.classList.contains('change-status-btn')) {
+                const memberId = e.target.dataset.id;
+                const currentStatus = e.target.dataset.status;
+                let newStatus;
+                
+                // Lógica de ciclo de estados: pagado -> caducado -> non_grata -> pagado ...
+                if (currentStatus === 'paid') {
+                    newStatus = 'expired';
+                } else if (currentStatus === 'expired') {
+                    newStatus = 'non_grata';
+                } else { // Si es 'non_grata' o cualquier otro estado, vuelve a 'paid'
+                    newStatus = 'paid';
+                }
+
+                const memberRef = doc(db, "members", memberId);
+                const dataToUpdate = { 
+                    status: newStatus,
+                    // Si el nuevo estado es 'pagado', actualizamos la fecha. Si no, la borramos.
+                    paymentDate: newStatus === 'paid' ? serverTimestamp() : null
+                };
+
+                await updateDoc(memberRef, dataToUpdate);
+                await logAction(`Cambió el estado del socio (ID: ${memberId}) a '${newStatus}'.`);
+            }
+        });
+        
+        document.getElementById('show-add-member-modal').addEventListener('click', () => addMemberModal.classList.remove('hidden'));
+        document.getElementById('cancel-add-member').addEventListener('click', () => {
+             addMemberForm.reset();
+             photoPreview.classList.add('hidden');
+             addMemberModal.classList.add('hidden');
+        });
+        
+        // --- MÓDULO DE HISTORIAL (LOGS) ---
+        const logsList = document.getElementById('logs-list');
+
+        async function logAction(actionText) {
+            if (!currentUser) return;
+            try {
+                await addDoc(collection(db, "logs"), {
+                    action: actionText,
+                    user: currentUser.email,
+                    timestamp: serverTimestamp()
+                });
+            } catch (error) {
+                console.error("Error logging action:", error);
+            }
+        }
+        
+        function listenToLogs() {
+            const q = query(collection(db, "logs"), orderBy("timestamp", "desc"));
+            onSnapshot(q, (snapshot) => {
+                logsList.innerHTML = '';
+                if(snapshot.empty) {
+                    logsList.innerHTML = '<p class="text-gray-500 text-center">No hay acciones registradas.</p>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const log = doc.data();
+                    const logDate = log.timestamp?.toDate().toLocaleString('es-ES') || 'Fecha pendiente...';
+                    const logElement = `
+                        <div class="bg-gray-800 p-3 rounded-lg flex justify-between items-center">
+                            <p><span class="font-bold text-blue-400">${log.user}</span>: ${log.action}</p>
+                            <p class="text-gray-400">${logDate}</p>
+                        </div>
+                    `;
+                    logsList.innerHTML += logElement;
+                });
+            });
+        }
+        
+    </script>
+</body>
+</html>
