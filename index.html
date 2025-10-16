@@ -245,7 +245,7 @@
         // Importa las funciones que necesitas de los SDKs de Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment, runTransaction, getDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
 
         // ==========================================================================================
@@ -872,6 +872,91 @@
         tpvSocioSelect.addEventListener('change', actualizarResumenTPV);
         tpvArticuloSelect.addEventListener('change', actualizarResumenTPV);
         tpvCantidadInput.addEventListener('input', actualizarResumenTPV);
+
+        async function procesarVenta() {
+            const idSocioSeleccionado = tpvSocioSelect.value;
+            const idArticuloSeleccionado = tpvArticuloSelect.value;
+            const cantidadVendida = parseInt(tpvCantidadInput.value, 10);
+
+            const nombreSocio = tpvSocioSelect.options[tpvSocioSelect.selectedIndex].text;
+            const selectedArticuloOption = tpvArticuloSelect.options[tpvArticuloSelect.selectedIndex];
+            const nombreArticulo = selectedArticuloOption.text;
+            const precioUnitario = parseFloat(selectedArticuloOption.dataset.precio || 0);
+            const precioTotalCalculado = cantidadVendida * precioUnitario;
+
+            realizarVentaBtn.disabled = true;
+            realizarVentaBtn.textContent = "Procesando...";
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const articuloRef = doc(db, "articulos", idArticuloSeleccionado);
+                    const sociosCollectionRef = getSociosCollectionRef();
+                    if (!sociosCollectionRef) {
+                        throw new Error("No se pudo obtener la referencia a la colección de socios.");
+                    }
+                    const socioRef = doc(sociosCollectionRef, idSocioSeleccionado);
+
+                    // 1. Leer el stock y el socio DENTRO de la transacción
+                    const articuloDoc = await transaction.get(articuloRef);
+                    const socioDoc = await transaction.get(socioRef);
+
+                    if (!articuloDoc.exists()) {
+                        throw "El artículo ya no existe.";
+                    }
+                    if (!socioDoc.exists()) {
+                        throw "El socio ya no existe.";
+                    }
+
+                    const stockActual = articuloDoc.data().stock;
+
+                    // 2. Validar el stock
+                    if (stockActual < cantidadVendida) {
+                        throw "Stock insuficiente para realizar la venta.";
+                    }
+
+                    // 3. Si hay stock, realizar las operaciones de escritura
+                    const nuevoStock = stockActual - cantidadVendida;
+                    transaction.update(articuloRef, { stock: nuevoStock });
+
+                    // 4. Crear el registro en la colección 'ventas'
+                    const ventaRef = doc(collection(db, "ventas")); // Crea una referencia para un nuevo doc
+                    transaction.set(ventaRef, {
+                        idSocio: idSocioSeleccionado,
+                        idArticulo: idArticuloSeleccionado,
+                        nombreArticulo: nombreArticulo,
+                        nombreSocio: nombreSocio,
+                        cantidad: cantidadVendida,
+                        precioTotal: precioTotalCalculado,
+                        fecha: serverTimestamp()
+                    });
+
+                    // 5. Crear el registro en la colección 'historial'
+                    const historialRef = doc(collection(db, "historial"));
+                    transaction.set(historialRef, {
+                        tipo: 'venta',
+                        descripcion: `Venta de ${cantidadVendida} uds. de "${nombreArticulo}" a "${nombreSocio}"`,
+                        fecha: serverTimestamp()
+                    });
+                });
+
+                showToast("¡Venta realizada con éxito!");
+                // Resetear formulario TPV
+                tpvSocioSelect.value = '';
+                tpvArticuloSelect.value = '';
+                tpvCantidadInput.value = '';
+                actualizarResumenTPV();
+
+            } catch (error) {
+                console.error("Error en la transacción: ", error);
+                showToast(typeof error === 'string' ? error : "Error al procesar la venta.", true);
+            } finally {
+                realizarVentaBtn.disabled = false;
+                realizarVentaBtn.textContent = "Realizar Venta";
+                actualizarResumenTPV(); // Re-evalúa el estado del botón
+            }
+        }
+
+        realizarVentaBtn.addEventListener('click', procesarVenta);
 
 
         // --- MÓDULO DE HISTORIAL ---
