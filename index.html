@@ -62,7 +62,7 @@
                         <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         <h2 class="text-xl font-semibold">Socios</h2>
                     </div>
-                    <div data-view="articles-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                    <div data-view="articulos-section" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
                         <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
                         <h2 class="text-xl font-semibold">Artículos</h2>
                     </div>
@@ -106,18 +106,19 @@
                 </div>
             </section>
             
-            <section id="articles-view" class="view hidden space-y-8">
+            <section id="articulos-section" class="view hidden space-y-8">
                 <div>
                     <h2 class="text-2xl font-bold mb-4">Añadir Nuevo Artículo</h2>
-                    <form id="add-article-form" class="bg-gray-800 p-6 rounded-lg">
+                    <form id="form-articulo" class="bg-gray-800 p-6 rounded-lg">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label for="article-nombre" class="block mb-2 text-sm font-medium text-gray-300">Nombre del Artículo</label>
+                                <label for="article-nombre" class="block mb-2 text-sm font-medium text-gray-300">Nombre</label>
                                 <input type="text" id="article-nombre" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                             </div>
                             <div>
                                 <label for="article-categoria" class="block mb-2 text-sm font-medium text-gray-300">Categoría</label>
-                                <input type="text" id="article-categoria" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                                <input list="categorias-datalist" type="text" id="article-categoria" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                                <datalist id="categorias-datalist"></datalist>
                             </div>
                             <div>
                                 <label for="article-unidad" class="block mb-2 text-sm font-medium text-gray-300">Unidad Mínima de Venta</label>
@@ -125,7 +126,7 @@
                             </div>
                             <div>
                                 <label for="article-precio" class="block mb-2 text-sm font-medium text-gray-300">Precio por Unidad (€)</label>
-                                <input type="number" id="article-precio" min="0.01" step="0.01" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                                <input type="number" id="article-precio" min="0" step="0.01" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                             </div>
                         </div>
                         <div class="mt-6 text-right">
@@ -135,7 +136,7 @@
                 </div>
                 <div>
                     <h2 class="text-2xl font-bold mb-4">Inventario</h2>
-                    <div id="articles-list" class="space-y-6">
+                    <div id="lista-articulos-container" class="space-y-6">
                         <!-- Los artículos se renderizarán aquí -->
                     </div>
                 </div>
@@ -282,7 +283,7 @@
                 appContainer.classList.remove('hidden');
                 showView('main-menu-view');
                 listenToSocios();
-                listenToLogs();
+                listenToHistory();
                 listenToArticles();
             } else {
                 currentUser = null;
@@ -583,21 +584,24 @@
         });
 
         // --- MÓDULO DE ARTÍCULOS (STOCK) ---
-        const addArticleForm = document.getElementById('add-article-form');
-        const articlesList = document.getElementById('articles-list');
+        const formArticulo = document.getElementById('form-articulo');
+        const listaArticulosContainer = document.getElementById('lista-articulos-container');
+        const categoriasDatalist = document.getElementById('categorias-datalist');
 
         function listenToArticles() {
             const q = query(collection(db, "articulos"), orderBy("categoria"), orderBy("nombre"));
 
             onSnapshot(q, (snapshot) => {
                 if (snapshot.empty) {
-                    articlesList.innerHTML = '<p class="text-gray-500 text-center">No hay artículos en el inventario.</p>';
+                    listaArticulosContainer.innerHTML = '<p class="text-gray-500 text-center">No hay artículos en el inventario.</p>';
                     return;
                 }
 
-                const articlesByCat = snapshot.docs.reduce((acc, doc) => {
+                const allCategories = new Set();
+                const articulosPorCategoria = snapshot.docs.reduce((acc, doc) => {
                     const article = { id: doc.id, ...doc.data() };
                     const category = article.categoria || 'Sin Categoría';
+                    allCategories.add(category); // Populate categories for datalist
                     if (!acc[category]) {
                         acc[category] = [];
                     }
@@ -605,13 +609,22 @@
                     return acc;
                 }, {});
 
-                articlesList.innerHTML = '';
+                // Update Datalist
+                categoriasDatalist.innerHTML = '';
+                allCategories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    categoriasDatalist.appendChild(option);
+                });
 
-                for (const category in articlesByCat) {
+
+                listaArticulosContainer.innerHTML = '';
+
+                for (const category in articulosPorCategoria) {
                     const categoryContainer = document.createElement('div');
                     categoryContainer.className = 'bg-gray-800 p-4 rounded-lg';
 
-                    const categoryTitle = document.createElement('h3');
+                    const categoryTitle = document.createElement('h2');
                     categoryTitle.className = 'text-xl font-semibold mb-3 text-blue-400 border-b border-gray-700 pb-2';
                     categoryTitle.textContent = category;
                     categoryContainer.appendChild(categoryTitle);
@@ -619,42 +632,43 @@
                     const itemsContainer = document.createElement('div');
                     itemsContainer.className = 'space-y-2 mt-3';
 
-                    articlesByCat[category].forEach(article => {
+                    articulosPorCategoria[category].forEach(article => {
                         const articleElement = document.createElement('div');
                         articleElement.className = 'grid grid-cols-1 sm:grid-cols-4 items-center gap-4 p-2 rounded-md hover:bg-gray-700/50';
+                        articleElement.dataset.id = article.id;
 
                         const precio = article.precioPorUnidad || 0;
-                        const unidad = article.unidadMinimaVenta || 1;
+                        const stock = article.stock || 0;
 
                         articleElement.innerHTML = `
                             <div class="sm:col-span-2">
                                 <p class="font-medium">${article.nombre}</p>
-                                <p class="text-xs text-gray-400">${precio.toFixed(2)}€ / ${unidad} ud.</p>
+                                <p class="text-xs text-gray-400">Precio: ${precio.toFixed(2)}€</p>
                             </div>
-                            <p>Stock: <span class="font-bold">${article.stock}</span></p>
-                            <div class="flex items-center gap-2">
-                                <input type="number" min="1" placeholder="Cant." class="stock-input bg-gray-600 border border-gray-500 text-white sm:text-sm rounded-lg w-20 p-1.5" data-id="${article.id}">
-                                <button class="load-stock-btn bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded-lg" data-id="${article.id}" data-name="${article.nombre}">Cargar</button>
-                            </div>
+                            <p>Stock: <span class="font-bold">${stock}</span></p>
+                            <form class="stock-form inline-flex items-center gap-2">
+                                <input type="number" min="1" placeholder="Cantidad" class="stock-input bg-gray-600 border border-gray-500 text-white sm:text-sm rounded-lg w-24 p-1.5">
+                                <button type="submit" class="load-stock-btn bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded-lg">Cargar Stock</button>
+                            </form>
                         `;
                         itemsContainer.appendChild(articleElement);
                     });
 
                     categoryContainer.appendChild(itemsContainer);
-                    articlesList.appendChild(categoryContainer);
+                    listaArticulosContainer.appendChild(categoryContainer);
                 }
             });
         }
 
-        addArticleForm.addEventListener('submit', async (e) => {
+        formArticulo.addEventListener('submit', async (e) => {
             e.preventDefault();
             const nombre = document.getElementById('article-nombre').value.trim();
             const categoria = document.getElementById('article-categoria').value.trim();
             const unidadMinimaVenta = Number(document.getElementById('article-unidad').value);
             const precioPorUnidad = Number(document.getElementById('article-precio').value);
 
-            if (!nombre || !categoria || !unidadMinimaVenta || !precioPorUnidad) {
-                alert("Por favor, completa todos los campos.");
+            if (!nombre || !categoria || !unidadMinimaVenta || precioPorUnidad < 0) {
+                showToast("Por favor, completa todos los campos correctamente.", true);
                 return;
             }
 
@@ -667,76 +681,88 @@
                     stock: 0,
                     createdAt: serverTimestamp()
                 });
-                await logAction(`Añadió el artículo: ${nombre}`);
-                addArticleForm.reset();
+                showToast(`Artículo "${nombre}" añadido con éxito.`);
+                formArticulo.reset();
             } catch (error) {
                 console.error("Error adding article: ", error);
-                alert("Hubo un error al añadir el artículo.");
+                showToast("Hubo un error al añadir el artículo.", true);
             }
         });
 
-        articlesList.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('load-stock-btn')) {
-                const articleId = e.target.dataset.id;
-                const articleName = e.target.dataset.name;
-                const input = articlesList.querySelector(`.stock-input[data-id="${articleId}"]`);
-                const quantity = Number(input.value);
+        listaArticulosContainer.addEventListener('submit', async (e) => {
+            if (e.target.classList.contains('stock-form')) {
+                e.preventDefault();
+                const form = e.target;
+                const articleElement = form.closest('[data-id]');
+                const articleId = articleElement.dataset.id;
+                const articleName = articleElement.querySelector('.font-medium').textContent;
 
-                if (!input || !quantity || quantity <= 0) {
-                    alert("Por favor, introduce una cantidad válida.");
+                const input = form.querySelector('.stock-input');
+                const cantidad = Number(input.value);
+
+                if (!cantidad || cantidad <= 0) {
+                    showToast("Por favor, introduce una cantidad positiva.", true);
                     return;
                 }
 
                 const articleRef = doc(db, "articulos", articleId);
 
                 try {
+                    // 1. Actualizar stock
                     await updateDoc(articleRef, {
-                        stock: increment(quantity)
+                        stock: increment(cantidad)
                     });
-                    await logAction(`Cargó ${quantity} uds. de ${articleName} (stock)`);
-                    input.value = '';
+
+                    // 2. Registrar en historial
+                    await addDoc(collection(db, "historial"), {
+                        tipo: "recarga",
+                        descripcion: `Recarga de ${cantidad} uds. de "${articleName}"`,
+                        fecha: serverTimestamp()
+                    });
+
+                    showToast(`Stock de "${articleName}" actualizado.`);
+                    input.value = ''; // Reset input
                 } catch (error) {
                     console.error("Error updating stock: ", error);
-                    alert("Error al actualizar el stock.");
+                    showToast("Error al actualizar el stock.", true);
                 }
             }
         });
 
 
-        // --- MÓDULO DE HISTORIAL (LOGS) ---
-        const logsList = document.getElementById('logs-list');
+        // --- MÓDULO DE HISTORIAL ---
+        const historyList = document.getElementById('logs-list'); // Reusing the same list element for now
 
-        async function logAction(actionText) {
-            if (!currentUser) return;
-            try {
-                await addDoc(collection(db, "logs"), {
-                    action: actionText,
-                    user: currentUser.email,
-                    timestamp: serverTimestamp()
-                });
-            } catch (error) {
-                console.error("Error logging action:", error);
-            }
-        }
-        
-        function listenToLogs() {
-            const q = query(collection(db, "logs"), orderBy("timestamp", "desc"));
+        function listenToHistory() {
+            const q = query(collection(db, "historial"), orderBy("fecha", "desc"));
             onSnapshot(q, (snapshot) => {
-                logsList.innerHTML = '';
+                historyList.innerHTML = '';
                 if(snapshot.empty) {
-                    logsList.innerHTML = '<p class="text-gray-500 text-center">No hay acciones registradas.</p>';
+                    historyList.innerHTML = '<p class="text-gray-500 text-center">No hay registros en el historial.</p>';
                     return;
                 }
                 snapshot.forEach(doc => {
-                    const log = doc.data();
-                    const logDate = log.timestamp?.toDate().toLocaleString('es-ES') || 'Fecha pendiente...';
+                    const item = doc.data();
+                    const itemDate = item.fecha?.toDate().toLocaleString('es-ES') || 'Fecha pendiente...';
+
+                    const typeInfo = {
+                        'recarga': { icon: '📦', color: 'text-green-400' },
+                        'venta': { icon: '🛒', color: 'text-red-400' },
+                        'default': { icon: '📋', color: 'text-gray-400'}
+                    };
+
+                    const currentType = typeInfo[item.tipo] || typeInfo['default'];
+
                     const logElement = `
-                        <div class="bg-gray-800 p-3 rounded-lg flex justify-between items-center">
-                            <p><span class="font-bold text-blue-400">${log.user}</span>: ${log.action}</p>
-                            <p class="text-gray-400">${logDate}</p>
+                        <div class="bg-gray-800 p-3 rounded-lg flex justify-between items-center gap-4">
+                            <div class="flex items-center gap-3">
+                               <span class="text-xl ${currentType.color}">${currentType.icon}</span>
+                               <p>${item.descripcion}</p>
+                            </div>
+                            <p class="text-gray-400 text-sm whitespace-nowrap">${itemDate}</p>
                         </div>
                     `;
-                    logsList.innerHTML += logElement;
+                    historyList.innerHTML += logElement;
                 });
             });
         }
