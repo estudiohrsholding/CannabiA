@@ -1,15 +1,9 @@
 // ------------------------------------------------------------------
 // Firebase Configuration
 // ------------------------------------------------------------------
-// IMPORTANTE: Reemplaza esto con la configuración de tu proyecto Firebase
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
+// IMPORTANTE: The firebaseConfig is now loaded from firebase-config.js
+// This file is not versioned. Make sure it contains your project's
+// Firebase configuration.
 
 // Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
@@ -114,8 +108,9 @@ const showToast = (message, isError = false) => {
 // ------------------------------------------------------------------
 auth.onAuthStateChanged(user => {
     if (user) {
+        console.log("User is logged in, updating view...");
         // Usuario logueado
-        loginView.classList.remove('active');
+        loginView.style.display = 'none'; // Hide login view directly
         mainContent.classList.remove('hidden');
         showView('main-menu-view');
     } else {
@@ -571,8 +566,16 @@ let unsubArticulos;
 auth.onAuthStateChanged(user => {
     if (user) {
         document.getElementById('articulos-skeleton-loader').style.display = 'block';
-        unsubArticulos = db.collection('articulos').orderBy('categoria').orderBy('nombre').onSnapshot(snapshot => {
-            const articulos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+unsubArticulos = db.collection('articulos').onSnapshot(snapshot => {
+    let articulos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    // Sort on the client-side to avoid needing a composite index
+    articulos.sort((a, b) => {
+        if (a.categoria < b.categoria) return -1;
+        if (a.categoria > b.categoria) return 1;
+        if (a.nombre.toLowerCase() < b.nombre.toLowerCase()) return -1;
+        if (a.nombre.toLowerCase() > b.nombre.toLowerCase()) return 1;
+        return 0;
+    });
             renderArticulos(articulos);
         }, err => {
             console.error(err);
