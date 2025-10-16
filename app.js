@@ -2,8 +2,6 @@
 // Firebase Configuration
 // ------------------------------------------------------------------
 // IMPORTANTE: The firebaseConfig is now loaded from firebase-config.js
-// This file is not versioned. Make sure it contains your project's
-// Firebase configuration.
 
 // Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
@@ -228,7 +226,7 @@ const renderSocios = (socios) => {
         return `
             <div class="socio-card bg-slate-800 p-4 rounded-lg flex items-center justify-between hover:bg-slate-700/50 transition-colors duration-200" data-id="${id}">
                 <div class="flex items-center space-x-4">
-                    <img src="${fotoUrl || 'https://via.placeholder.com/50'}" alt="Foto de ${nombre}" class="w-12 h-12 rounded-full object-cover">
+                    <img src="${fotoUrl || './placeholder.svg'}" alt="Foto de ${nombre}" class="w-12 h-12 rounded-full object-cover">
                     <div>
                         <p class="font-bold text-lg">${nombre}</p>
                         <p class="text-sm text-slate-400">ID: ${id}</p>
@@ -566,16 +564,16 @@ let unsubArticulos;
 auth.onAuthStateChanged(user => {
     if (user) {
         document.getElementById('articulos-skeleton-loader').style.display = 'block';
-unsubArticulos = db.collection('articulos').onSnapshot(snapshot => {
-    let articulos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    // Sort on the client-side to avoid needing a composite index
-    articulos.sort((a, b) => {
-        if (a.categoria < b.categoria) return -1;
-        if (a.categoria > b.categoria) return 1;
-        if (a.nombre.toLowerCase() < b.nombre.toLowerCase()) return -1;
-        if (a.nombre.toLowerCase() > b.nombre.toLowerCase()) return 1;
-        return 0;
-    });
+        unsubArticulos = db.collection('articulos').onSnapshot(snapshot => {
+            let articulos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            // Sort on the client-side to avoid needing a composite index
+            articulos.sort((a, b) => {
+                if (a.categoria < b.categoria) return -1;
+                if (a.categoria > b.categoria) return 1;
+                if (a.nombre.toLowerCase() < b.nombre.toLowerCase()) return -1;
+                if (a.nombre.toLowerCase() > b.nombre.toLowerCase()) return 1;
+                return 0;
+            });
             renderArticulos(articulos);
         }, err => {
             console.error(err);
