@@ -36,8 +36,23 @@
             </form>
         </div>
     </div>
+    <div id="load-stock-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+        <div id="load-stock-modal-content" class="relative bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md z-50">
+            <h2 id="load-stock-modal-title" class="text-2xl font-bold mb-4">Cargando stock para: </h2>
+            <form id="load-stock-form">
+                <div class="mb-4">
+                    <label for="stock-cantidad-input" class="block mb-2 text-sm font-medium text-gray-300">Cantidad a Cargar</label>
+                    <input type="number" id="stock-cantidad-input" min="1" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" id="cancel-load-stock" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" id="confirm-load-stock-btn" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-lg">Confirmar Carga</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <div id="app-container" class="hidden w-full max-w-6xl mx-auto">
+    <div id="app-container" class="w-full max-w-6xl mx-auto">
         <div id="view-id-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
             <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
                 <h2 class="text-2xl font-bold mb-4">Foto del ID</h2>
@@ -635,6 +650,74 @@
         const formArticulo = document.getElementById('form-articulo');
         const listaArticulosContainer = document.getElementById('lista-articulos-container');
         const categoriasDatalist = document.getElementById('categorias-datalist');
+        const loadStockModalOverlay = document.getElementById('load-stock-modal-overlay');
+        const loadStockModalTitle = document.getElementById('load-stock-modal-title');
+        const loadStockForm = document.getElementById('load-stock-form');
+        const cancelLoadStockBtn = document.getElementById('cancel-load-stock');
+        let currentArticleForStockLoad = null;
+
+        function openLoadStockModal(articleId, articleName) {
+            currentArticleForStockLoad = { id: articleId, nombre: articleName };
+            loadStockModalTitle.textContent = `Cargando stock para: ${articleName}`;
+            loadStockModalOverlay.classList.remove('hidden');
+        }
+
+        function closeLoadStockModal() {
+            loadStockForm.reset();
+            currentArticleForStockLoad = null;
+            loadStockModalOverlay.classList.add('hidden');
+        }
+
+        listaArticulosContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('load-stock-btn')) {
+                const articleId = e.target.dataset.id;
+                const articleName = e.target.dataset.nombre;
+                openLoadStockModal(articleId, articleName);
+            }
+        });
+
+        cancelLoadStockBtn.addEventListener('click', closeLoadStockModal);
+        loadStockModalOverlay.addEventListener('click', (e) => {
+            if (e.target === loadStockModalOverlay) {
+                closeLoadStockModal();
+            }
+        });
+
+        loadStockForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentArticleForStockLoad) return;
+
+            const cantidadInput = document.getElementById('stock-cantidad-input');
+            const cantidad = Number(cantidadInput.value);
+
+            if (!cantidad || cantidad <= 0) {
+                showToast("Por favor, introduce una cantidad positiva.", true);
+                return;
+            }
+
+            const { id: articleId, nombre: articleName } = currentArticleForStockLoad;
+            const articleRef = doc(db, "articulos", articleId);
+
+            try {
+                // 1. Actualizar stock atómicamente
+                await updateDoc(articleRef, {
+                    stock: increment(cantidad)
+                });
+
+                // 2. Registrar en historial
+                await addDoc(collection(db, "historial"), {
+                    tipo: "recarga",
+                    descripcion: `Recarga de ${cantidad} uds. de "${articleName}"`,
+                    fecha: serverTimestamp()
+                });
+
+                showToast(`Stock de "${articleName}" actualizado con éxito.`);
+                closeLoadStockModal();
+            } catch (error) {
+                console.error("Error updating stock: ", error);
+                showToast("Error al actualizar el stock.", true);
+            }
+        });
 
         function listenToArticles() {
             const q = query(collection(db, "articulos"), orderBy("categoria"), orderBy("nombre"));
@@ -691,13 +774,14 @@
                         articleElement.innerHTML = `
                             <div class="sm:col-span-2">
                                 <p class="font-medium">${article.nombre}</p>
-                                <p class="text-xs text-gray-400">Precio: ${precio.toFixed(2)}€</p>
+                                <p class="text-xs text-gray-400">Categoría: ${article.categoria} | Precio: ${precio.toFixed(2)}€</p>
                             </div>
                             <p>Stock: <span class="font-bold">${stock}</span></p>
-                            <form class="stock-form inline-flex items-center gap-2">
-                                <input type="number" min="1" placeholder="Cantidad" class="stock-input bg-gray-600 border border-gray-500 text-white sm:text-sm rounded-lg w-24 p-1.5">
-                                <button type="submit" class="load-stock-btn bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded-lg">Cargar Stock</button>
-                            </form>
+                            <div class="sm:col-span-1 sm:text-right">
+                                <button data-id="${article.id}" data-nombre="${article.nombre}" class="load-stock-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                                    Cargar Stock
+                                </button>
+                            </div>
                         `;
                         itemsContainer.appendChild(articleElement);
                     });
@@ -734,46 +818,6 @@
             } catch (error) {
                 console.error("Error adding article: ", error);
                 showToast("Hubo un error al añadir el artículo.", true);
-            }
-        });
-
-        listaArticulosContainer.addEventListener('submit', async (e) => {
-            if (e.target.classList.contains('stock-form')) {
-                e.preventDefault();
-                const form = e.target;
-                const articleElement = form.closest('[data-id]');
-                const articleId = articleElement.dataset.id;
-                const articleName = articleElement.querySelector('.font-medium').textContent;
-
-                const input = form.querySelector('.stock-input');
-                const cantidad = Number(input.value);
-
-                if (!cantidad || cantidad <= 0) {
-                    showToast("Por favor, introduce una cantidad positiva.", true);
-                    return;
-                }
-
-                const articleRef = doc(db, "articulos", articleId);
-
-                try {
-                    // 1. Actualizar stock
-                    await updateDoc(articleRef, {
-                        stock: increment(cantidad)
-                    });
-
-                    // 2. Registrar en historial
-                    await addDoc(collection(db, "historial"), {
-                        tipo: "recarga",
-                        descripcion: `Recarga de ${cantidad} uds. de "${articleName}"`,
-                        fecha: serverTimestamp()
-                    });
-
-                    showToast(`Stock de "${articleName}" actualizado.`);
-                    input.value = ''; // Reset input
-                } catch (error) {
-                    console.error("Error updating stock: ", error);
-                    showToast("Error al actualizar el stock.", true);
-                }
             }
         });
 
