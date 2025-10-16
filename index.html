@@ -720,7 +720,9 @@
         });
 
         function listenToArticles() {
-            const q = query(collection(db, "articulos"), orderBy("categoria"), orderBy("nombre"));
+            // FIX: Se elimina el orden compuesto para no depender de un índice de Firestore.
+            // El orden se aplica ahora en el lado del cliente.
+            const q = query(collection(db, "articulos"));
 
             onSnapshot(q, (snapshot) => {
                 if (snapshot.empty) {
@@ -732,7 +734,7 @@
                 const articulosPorCategoria = snapshot.docs.reduce((acc, doc) => {
                     const article = { id: doc.id, ...doc.data() };
                     const category = article.categoria || 'Sin Categoría';
-                    allCategories.add(category); // Populate categories for datalist
+                    allCategories.add(category);
                     if (!acc[category]) {
                         acc[category] = [];
                     }
@@ -740,18 +742,25 @@
                     return acc;
                 }, {});
 
-                // Update Datalist
+                // Ordenar artículos dentro de cada categoría por nombre
+                for (const category in articulosPorCategoria) {
+                    articulosPorCategoria[category].sort((a, b) => a.nombre.localeCompare(b.nombre));
+                }
+
+                // Actualizar Datalist con categorías ordenadas
                 categoriasDatalist.innerHTML = '';
-                allCategories.forEach(cat => {
+                Array.from(allCategories).sort().forEach(cat => {
                     const option = document.createElement('option');
                     option.value = cat;
                     categoriasDatalist.appendChild(option);
                 });
 
-
                 listaArticulosContainer.innerHTML = '';
 
-                for (const category in articulosPorCategoria) {
+                // Obtener y ordenar las claves de categoría para renderizar en orden
+                const sortedCategories = Object.keys(articulosPorCategoria).sort((a, b) => a.localeCompare(b));
+
+                for (const category of sortedCategories) {
                     const categoryContainer = document.createElement('div');
                     categoryContainer.className = 'bg-gray-800 p-4 rounded-lg';
 
