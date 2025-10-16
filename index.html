@@ -25,10 +25,10 @@
         }
     </script>
     <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-storage-compat.js"></script>
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -48,15 +48,6 @@
         .modal-overlay.open { opacity: 1; pointer-events: auto; }
         .modal-content { transform: scale(0.95); opacity: 0; transition: all 0.2s ease-out; }
         .modal-content.open { transform: scale(1); opacity: 1; }
-
-        /* Animación de pulso para botones activos */
-        @keyframes pulse-once {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        .animate-pulse-once {
-            animation: pulse-once 0.5s ease-out;
-        }
 
         /* Estilos para el menú desplegable de acciones (kebab menu) */
         .kebab-menu-dropdown {
@@ -80,7 +71,7 @@
 <body class="antialiased">
 
     <!-- Contenedor principal de la aplicación -->
-    <div id="app-container" class="min-h-screen">
+    <div id="app-container" class="min-h-screen hidden">
 
         <!-- Pantalla de Login -->
         <div id="login-view" class="min-h-screen flex items-center justify-center bg-slate-900">
@@ -88,16 +79,17 @@
                 <h1 class="text-3xl font-bold text-center text-emerald-500 mb-6">Club Social</h1>
                 <form id="login-form">
                     <div class="mb-4">
-                        <label for="email" class="block text-sm font-medium text-slate-400 mb-1">Email</label>
-                        <input type="email" id="email" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors duration-200" required>
+                        <label for="login-email" class="block text-sm font-medium text-slate-400 mb-1">Email</label>
+                        <input type="email" id="login-email" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors duration-200" required>
                     </div>
                     <div class="mb-6">
-                        <label for="password" class="block text-sm font-medium text-slate-400 mb-1">Contraseña</label>
-                        <input type="password" id="password" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors duration-200" required>
+                        <label for="login-password" class="block text-sm font-medium text-slate-400 mb-1">Contraseña</label>
+                        <input type="password" id="login-password" class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors duration-200" required>
                     </div>
                     <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">
                         Iniciar Sesión
                     </button>
+                    <p id="login-error" class="text-red-400 text-sm mt-4 text-center"></p>
                 </form>
             </div>
         </div>
@@ -139,17 +131,17 @@
                 <!-- Menú Principal -->
                 <div id="main-menu-view" class="view min-h-[calc(100vh-120px)] flex items-center justify-center">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <a href="#" class="menu-item nav-link bg-slate-800 p-8 rounded-lg shadow-lg hover:shadow-xl text-center group transition-transform transform hover:-translate-y-1" data-view="tpv-section">
+                        <a href="#" class="nav-link menu-item bg-slate-800 p-8 rounded-lg shadow-lg hover:shadow-xl text-center group transition-transform transform hover:-translate-y-1" data-view="tpv-section">
                             <svg class="w-16 h-16 mx-auto mb-4 text-slate-400 group-hover:text-emerald-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H7a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                             <h2 class="text-2xl font-bold text-white">TPV</h2>
                             <p class="text-slate-400">Punto de venta</p>
                         </a>
-                        <a href="#" class="menu-item nav-link bg-slate-800 p-8 rounded-lg shadow-lg hover:shadow-xl text-center group transition-transform transform hover:-translate-y-1" data-view="socios-section">
+                        <a href="#" class="nav-link menu-item bg-slate-800 p-8 rounded-lg shadow-lg hover:shadow-xl text-center group transition-transform transform hover:-translate-y-1" data-view="socios-section">
                             <svg class="w-16 h-16 mx-auto mb-4 text-slate-400 group-hover:text-emerald-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 21a6 6 0 006-6v-1a6 6 0 00-6-6h-3a6 6 0 00-6 6v1a6 6 0 006 6h3a6 6 0 006-6v-1"></path></svg>
                             <h2 class="text-2xl font-bold text-white">Socios</h2>
                             <p class="text-slate-400">Gestionar miembros</p>
                         </a>
-                        <a href="#" class="menu-item nav-link bg-slate-800 p-8 rounded-lg shadow-lg hover:shadow-xl text-center group transition-transform transform hover:-translate-y-1" data-view="articulos-section">
+                        <a href="#" class="nav-link menu-item bg-slate-800 p-8 rounded-lg shadow-lg hover:shadow-xl text-center group transition-transform transform hover:-translate-y-1" data-view="articulos-section">
                             <svg class="w-16 h-16 mx-auto mb-4 text-slate-400 group-hover:text-emerald-500 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
                             <h2 class="text-2xl font-bold text-white">Artículos</h2>
                             <p class="text-slate-400">Gestionar inventario</p>
@@ -164,12 +156,12 @@
                             <h2 class="text-2xl font-bold text-white mb-4">Nueva Dispensa</h2>
                             <form id="tpv-form">
                                 <div class="mb-4">
-                                    <label for="tpv-socio" class="block text-sm font-medium text-slate-400 mb-1">Socio</label>
-                                    <select id="tpv-socio" class="w-full p-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 transition-colors duration-200"></select>
+                                    <label for="tpv-socio-select" class="block text-sm font-medium text-slate-400 mb-1">Socio</label>
+                                    <select id="tpv-socio-select" class="w-full p-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 transition-colors duration-200"></select>
                                 </div>
                                 <div class="mb-4">
-                                    <label for="tpv-articulo" class="block text-sm font-medium text-slate-400 mb-1">Artículo</label>
-                                    <select id="tpv-articulo" class="w-full p-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 transition-colors duration-200"></select>
+                                    <label for="tpv-articulo-select" class="block text-sm font-medium text-slate-400 mb-1">Artículo</label>
+                                    <select id="tpv-articulo-select" class="w-full p-2 bg-slate-700 border border-slate-600 rounded-md focus:outline-none focus:border-emerald-500 focus:ring-emerald-500 transition-colors duration-200"></select>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div class="mb-4">
@@ -185,10 +177,14 @@
                         </div>
                         <div class="bg-slate-800 p-6 rounded-lg shadow-lg border-l-4 border-emerald-600">
                             <h2 class="text-2xl font-bold text-white mb-4">Resumen de Dispensa</h2>
-                            <div id="tpv-resumen">
-                                <p class="text-slate-400">Seleccione un socio y un artículo.</p>
+                            <div id="tpv-resumen" class="space-y-2">
+                                <p><span class="font-semibold text-slate-400">Socio:</span> <span id="resumen-socio">--</span></p>
+                                <p><span class="font-semibold text-slate-400">Artículo:</span> <span id="resumen-articulo">--</span></p>
+                                <p><span class="font-semibold text-slate-400">Cantidad:</span> <span id="resumen-cantidad">--</span></p>
+                                <hr class="border-slate-600 my-2">
+                                <p class="text-xl"><span class="font-bold text-white">Total:</span> <span id="resumen-total" class="font-bold text-emerald-400">0.00 €</span></p>
                             </div>
-                            <button id="realizar-dispensa-button" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-md transition-all duration-200 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50">
+                            <button id="realizar-dispensa-btn" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-md transition-all duration-200 disabled:bg-slate-600 disabled:cursor-not-allowed disabled:opacity-50">
                                 REALIZAR DISPENSA
                             </button>
                         </div>
@@ -223,17 +219,6 @@
                         <div id="socios-skeleton-loader" class="space-y-2">
                              <!-- Skeleton loaders -->
                              <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg animate-pulse">
-                                <div class="flex items-center space-x-4">
-                                    <div class="w-10 h-10 rounded-full bg-slate-600"></div>
-                                    <div>
-                                        <div class="h-4 bg-slate-600 rounded w-32 mb-2"></div>
-                                        <div class="h-3 bg-slate-600 rounded w-24"></div>
-                                    </div>
-                                </div>
-                                <div class="h-4 bg-slate-600 rounded w-20"></div>
-                                <div class="h-8 w-8 bg-slate-600 rounded-md"></div>
-                            </div>
-                            <div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg animate-pulse">
                                 <div class="flex items-center space-x-4">
                                     <div class="w-10 h-10 rounded-full bg-slate-600"></div>
                                     <div>
@@ -286,15 +271,6 @@
                                         <div class="h-8 w-16 bg-slate-700 rounded"></div>
                                     </div>
                                 </div>
-                                <div class="bg-slate-800 rounded-lg shadow-lg p-4 space-y-3">
-                                    <div class="h-5 bg-slate-700 rounded w-3/4"></div>
-                                    <div class="h-4 bg-slate-700 rounded w-1/2"></div>
-                                    <div class="h-4 bg-slate-700 rounded w-1/3"></div>
-                                    <div class="flex justify-end space-x-2 pt-2">
-                                        <div class="h-8 w-16 bg-slate-700 rounded"></div>
-                                        <div class="h-8 w-16 bg-slate-700 rounded"></div>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -318,10 +294,8 @@
 
                 <!-- Sección Historial -->
                 <div id="historial-section" class="view hidden">
-                    <div class="bg-slate-800 rounded-lg shadow-lg">
-                        <ul id="historial-list" class="divide-y divide-slate-700">
-                            <!-- Los eventos del historial se insertarán aquí -->
-                        </ul>
+                    <div id="historial-list" class="bg-slate-800 rounded-lg shadow-lg p-4 space-y-3">
+                        <!-- Los eventos del historial se insertarán aquí -->
                     </div>
                 </div>
             </main>
@@ -330,7 +304,7 @@
     
     <!-- Modal para añadir/editar socio -->
     <div id="socio-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-40">
-        <div id="socio-modal-content" class="modal-content bg-slate-800 rounded-lg shadow-2xl w-full max-w-md p-6">
+        <div class="modal-content bg-slate-800 rounded-lg shadow-2xl w-full max-w-md p-6">
             <h2 id="socio-modal-title" class="text-2xl font-bold text-white mb-6">Añadir Socio</h2>
             <form id="socio-form">
                 <input type="hidden" id="socio-id">
@@ -343,7 +317,7 @@
                 </div>
                 <div class="mb-4">
                     <label for="foto-socio" class="block text-sm font-medium text-slate-400 mb-1">Foto de perfil</label>
-                    <input type="file" id="foto-socio" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 transition-colors duration-200">
+                    <input type="file" id="foto-socio" accept="image/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-700 transition-colors duration-200">
                     <img id="foto-socio-preview" src="" class="hidden mt-4 w-32 h-32 object-cover rounded-full mx-auto"/>
                 </div>
                 <div class="flex justify-end space-x-4 mt-6">
@@ -362,7 +336,7 @@
 
     <!-- Modal para detalles de socio -->
     <div id="socio-details-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-40">
-        <div id="socio-details-modal-content" class="modal-content bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm p-6 text-center relative">
+        <div class="modal-content bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm p-6 text-center relative">
             <button id="close-socio-details-button" class="absolute top-3 right-3 text-slate-400 hover:text-white transition-colors duration-200">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
@@ -378,7 +352,7 @@
 
     <!-- Modal para añadir/editar artículo -->
     <div id="articulo-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-40">
-        <div id="articulo-modal-content" class="modal-content bg-slate-800 rounded-lg shadow-2xl w-full max-w-md p-6">
+        <div class="modal-content bg-slate-800 rounded-lg shadow-2xl w-full max-w-md p-6">
             <h2 id="articulo-modal-title" class="text-2xl font-bold text-white mb-6">Añadir Artículo</h2>
             <form id="articulo-form" data-editing-id="">
                 <div class="mb-4">
@@ -413,7 +387,7 @@
 
     <!-- Modal de confirmación genérico -->
     <div id="confirmation-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div id="confirmation-modal-content" class="modal-content bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm p-6 text-center">
+        <div class="modal-content bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm p-6 text-center">
             <h2 id="confirmation-modal-title" class="text-xl font-bold text-white mb-4"></h2>
             <p id="confirmation-modal-message" class="text-slate-400 mb-6"></p>
             <div class="flex justify-center space-x-4">
@@ -425,7 +399,7 @@
 
     <!-- Modal para recargar stock -->
     <div id="recharge-stock-modal-overlay" class="modal-overlay fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-40">
-        <div id="recharge-stock-modal-content" class="modal-content bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm p-6">
+        <div class="modal-content bg-slate-800 rounded-lg shadow-2xl w-full max-w-sm p-6">
             <h2 class="text-2xl font-bold text-white mb-6">Recargar Stock</h2>
             <form id="recharge-stock-form">
                 <input type="hidden" id="recharge-stock-id">
@@ -454,6 +428,820 @@
         <p id="toast-message"></p>
     </div>
 
-    <script type="module" src="app.js"></script>
+    <script type="module">
+        // Importa las funciones que necesitas de los SDKs de Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment, runTransaction, getDoc, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCCIRk9Vip1J5Zc8xAeObsU6poc-J8lcj0",
+            authDomain: "cannabia-9dfe3.firebaseapp.com",
+            projectId: "cannabia-9dfe3",
+            storageBucket: "cannabia-9dfe3.firebasestorage.app",
+            messagingSenderId: "605207982385",
+            appId: "1:605207982385:web:58254637495b2b6d2bc010",
+            measurementId: "G-6M1WRYG1PS"
+        };
+
+        if (!firebaseConfig || !firebaseConfig.apiKey || firebaseConfig.apiKey.startsWith("AIza...")) {
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'fixed top-0 left-0 w-full p-4 bg-red-800 text-white text-center text-lg z-50';
+            warningDiv.textContent = "¡ERROR DE CONFIGURACIÓN! Reemplaza el objeto 'firebaseConfig' de ejemplo en index.html con el tuyo.";
+            document.body.prepend(warningDiv);
+            throw new Error("Configuración de Firebase no válida o ausente.");
+        }
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let currentUser = null;
+
+        // --- GLOBAL DOM ELEMENTS ---
+        const loginView = document.getElementById('login-view');
+        const mainView = document.getElementById('main-view');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const logoutButton = document.getElementById('logout-button');
+        const mainTitle = document.getElementById('main-title');
+
+        // --- VIEW MANAGEMENT ---
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(view => view.classList.add('hidden'));
+            const activeView = document.getElementById(viewId);
+            if (activeView) {
+                activeView.classList.remove('hidden');
+                let title = 'Menú Principal';
+                if (viewId === 'tpv-section') title = 'TPV';
+                else if (viewId === 'socios-section') title = 'Socios';
+                else if (viewId === 'articulos-section') title = 'Artículos';
+                else if (viewId === 'dashboard-section') title = 'Dashboard';
+                else if (viewId === 'historial-section') title = 'Historial';
+                mainTitle.textContent = title;
+            }
+        }
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const viewId = link.dataset.view;
+                if (viewId) showView(viewId);
+            });
+        });
+
+        // --- AUTHENTICATION ---
+        setPersistence(auth, browserLocalPersistence);
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                currentUser = user;
+                loginView.classList.add('hidden');
+                mainView.classList.remove('hidden');
+                appContainer.classList.remove('hidden');
+                showView('main-menu-view');
+                initApp();
+            } else {
+                currentUser = null;
+                mainView.classList.add('hidden');
+                loginView.classList.remove('hidden');
+                appContainer.classList.remove('hidden');
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const loginError = document.getElementById('login-error');
+            loginError.textContent = '';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                loginError.textContent = 'Credenciales incorrectas.';
+                console.error("Login Error:", error);
+            }
+        });
+
+        logoutButton.addEventListener('click', () => signOut(auth));
+
+        // --- MODAL MANAGEMENT ---
+        function toggleModal(modalId, show) {
+            const overlay = document.getElementById(modalId);
+            if (!overlay) return;
+            const content = overlay.querySelector('.modal-content');
+            if (show) {
+                overlay.classList.add('open');
+                if(content) content.classList.add('open');
+            } else {
+                overlay.classList.remove('open');
+                if(content) content.classList.remove('open');
+            }
+        }
+
+        // --- TOAST NOTIFICATION ---
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast-notification');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMessage.textContent = message;
+            toast.className = toast.className.replace(/bg-\w+-\d+/, isError ? 'bg-red-600' : 'bg-emerald-600');
+
+            if (isError) {
+                toastIcon.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+            } else {
+                toastIcon.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+            }
+
+            toast.style.transform = 'translateX(0)';
+            setTimeout(() => {
+                toast.style.transform = 'translateX(calc(100% + 2rem))';
+            }, 3000);
+        }
+
+        // --- INITIALIZE APP MODULES ---
+        function initApp() {
+            initSociosModule();
+            initArticulosModule();
+            initTpvModule();
+            initHistorialModule();
+            // initDashboardModule(); // Uncomment when ready
+        }
+
+        // =================================================================================
+        // SOCIOS MODULE
+        // =================================================================================
+        function initSociosModule() {
+            const sociosList = document.getElementById('socios-list');
+            const searchInput = document.getElementById('search-socio');
+            const addSocioBtn = document.getElementById('add-socio-button');
+            const addFirstSocioBtn = document.getElementById('add-first-socio-button');
+            const socioModal = 'socio-modal-overlay';
+            const socioForm = document.getElementById('socio-form');
+            const cancelSocioBtn = document.getElementById('cancel-socio-button');
+            const saveSocioBtn = document.getElementById('save-socio-button');
+            const fotoSocioInput = document.getElementById('foto-socio');
+            const fotoSocioPreview = document.getElementById('foto-socio-preview');
+            const skeleton = document.getElementById('socios-skeleton-loader');
+            const emptyState = document.getElementById('socios-empty-state');
+
+            const detailsModal = 'socio-details-modal-overlay';
+            const closeDetailsBtn = document.getElementById('close-socio-details-button');
+
+            let qrCodeInstance = null;
+
+            function renderSocios(docs) {
+                sociosList.innerHTML = '';
+                if (docs.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+                emptyState.classList.add('hidden');
+
+                docs.forEach(doc => {
+                    const socio = doc.data();
+                    const hoy = new Date();
+                    let estadoFinal = socio.estado;
+
+                    if (socio.estado === 'Verde' && socio.fecha_caducidad_pago && socio.fecha_caducidad_pago.toDate() < hoy) {
+                        estadoFinal = 'Gris';
+                    }
+
+                    const statusInfo = {
+                        'Gris': { color: 'bg-slate-500/20 text-slate-400', text: 'Pendiente' },
+                        'Rojo': { color: 'bg-red-500/20 text-red-400', text: 'Non Grata' },
+                        'Verde': { color: 'bg-emerald-500/20 text-emerald-400', text: 'Activo' }
+                    };
+                    const currentStatus = statusInfo[estadoFinal] || statusInfo['Gris'];
+                    const fotoUrl = socio.url_foto_id || 'https://i.pravatar.cc/150?u=' + doc.id;
+
+                    const card = document.createElement('div');
+                    card.className = 'socio-card bg-slate-700/50 p-3 rounded-lg flex items-center justify-between transition-colors duration-200 hover:bg-slate-700';
+                    card.dataset.nombre = `${socio.nombre} ${socio.apellidos}`.toLowerCase();
+
+                    card.innerHTML = `
+                        <div class="flex items-center space-x-4">
+                            <img class="w-10 h-10 rounded-full object-cover" src="${fotoUrl}" alt="Foto de ${socio.nombre}">
+                            <div>
+                                <p class="font-semibold text-white">${socio.nombre} ${socio.apellidos}</p>
+                                <p class="text-sm text-slate-400">ID: ${doc.id.substring(0,6)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="px-3 py-1 text-sm font-semibold rounded-full ${currentStatus.color}">${currentStatus.text}</span>
+                            <div class="relative">
+                                <button class="kebab-menu-button p-2 rounded-full hover:bg-slate-600 transition-colors duration-200" data-id="${doc.id}">
+                                    <svg class="w-5 h-5 text-slate-400" fill="currentColor" viewBox="0 0 20 20"><path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path></svg>
+                                </button>
+                                <div class="kebab-menu-dropdown w-48">
+                                    <a href="#" class="action-link block px-4 py-2 text-sm text-slate-300 hover:bg-slate-600" data-action="view-details" data-id="${doc.id}">Ver Tarjeta</a>
+                                    <a href="#" class="action-link block px-4 py-2 text-sm text-slate-300 hover:bg-slate-600" data-action="change-status" data-id="${doc.id}" data-estado="${socio.estado}">Cambiar Estado</a>
+                                    <a href="#" class="action-link block px-4 py-2 text-sm text-slate-300 hover:bg-slate-600" data-action="edit" data-id="${doc.id}">Editar</a>
+                                    <a href="#" class="action-link block px-4 py-2 text-sm text-red-400 hover:bg-slate-600" data-action="delete" data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellidos}">Eliminar</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    sociosList.appendChild(card);
+                });
+            }
+
+            const q = query(collection(db, "socios"), orderBy("apellidos", "asc"));
+            onSnapshot(q, (snapshot) => {
+                skeleton.classList.add('hidden');
+                renderSocios(snapshot.docs);
+            }, (error) => {
+                console.error("Error listening to socios:", error);
+                skeleton.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.querySelector('p').textContent = "Error al cargar los socios.";
+            });
+
+            addSocioBtn.addEventListener('click', () => {
+                socioForm.reset();
+                fotoSocioPreview.classList.add('hidden');
+                socioForm.removeAttribute('data-editing-id');
+                document.getElementById('socio-modal-title').textContent = 'Añadir Socio';
+                toggleModal(socioModal, true);
+            });
+            addFirstSocioBtn.addEventListener('click', () => addSocioBtn.click());
+
+            cancelSocioBtn.addEventListener('click', () => toggleModal(socioModal, false));
+            document.getElementById(socioModal).addEventListener('click', (e) => {
+                if(e.target.id === socioModal) toggleModal(socioModal, false);
+            });
+
+            fotoSocioInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        fotoSocioPreview.src = event.target.result;
+                        fotoSocioPreview.classList.remove('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            socioForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const editingId = socioForm.dataset.editingId;
+                const nombre = document.getElementById('nombre-socio').value.trim();
+                const apellidos = document.getElementById('apellidos-socio').value.trim();
+                const dni = document.getElementById('dni-socio').value.trim();
+                const file = fotoSocioInput.files[0];
+
+                if(!nombre || !apellidos || !dni) {
+                    showToast("Nombre, apellidos y DNI son obligatorios.", true);
+                    return;
+                }
+                if(!editingId && !file) {
+                    showToast("La foto de perfil es obligatoria al crear un socio.", true);
+                    return;
+                }
+
+                const btnText = saveSocioBtn.querySelector('.btn-text');
+                const spinner = saveSocioBtn.querySelector('.spinner');
+                btnText.textContent = 'Guardando...';
+                spinner.classList.remove('hidden');
+                saveSocioBtn.disabled = true;
+
+                try {
+                    let downloadURL = null;
+                    if (file) {
+                        const storageRef = ref(storage, `socios_fotos/${editingId || doc(collection(db, "socios")).id}.jpg`);
+                        await uploadBytes(storageRef, file);
+                        downloadURL = await getDownloadURL(storageRef);
+                    }
+
+                    const socioData = {
+                        nombre,
+                        apellidos,
+                        dni,
+                        ...(downloadURL && { url_foto_id: downloadURL }),
+                    };
+
+                    if (editingId) {
+                        await updateDoc(doc(db, "socios", editingId), socioData);
+                        showToast("Socio actualizado con éxito.");
+                    } else {
+                        socioData.estado = 'Gris';
+                        socioData.fecha_ingreso = serverTimestamp();
+                        socioData.fecha_caducidad_pago = null;
+                        await addDoc(collection(db, "socios"), socioData);
+                        showToast("Socio añadido con éxito.");
+                    }
+                    toggleModal(socioModal, false);
+                } catch (error) {
+                    console.error("Error guardando socio:", error);
+                    showToast("Error al guardar el socio.", true);
+                } finally {
+                    btnText.textContent = 'Guardar';
+                    spinner.classList.add('hidden');
+                    saveSocioBtn.disabled = false;
+                }
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                document.querySelectorAll('.socio-card').forEach(card => {
+                    card.classList.toggle('hidden', !card.dataset.nombre.includes(searchTerm));
+                });
+            });
+
+            sociosList.addEventListener('click', async e => {
+                if (!e.target.classList.contains('action-link')) return;
+                e.preventDefault();
+                const { action, id, nombre, estado } = e.target.dataset;
+
+                if (action === 'delete') {
+                    showConfirmationModal(`¿Seguro que quieres eliminar a ${nombre}?`, 'Eliminar', async () => {
+                        try {
+                            await deleteDoc(doc(db, "socios", id));
+                            await addDoc(collection(db, "historial"), {
+                                tipo: "eliminacion",
+                                descripcion: `Socio "${nombre}" ha sido eliminado.`,
+                                fecha: serverTimestamp()
+                            });
+                            showToast("Socio eliminado.");
+                        } catch (error) {
+                            showToast("Error al eliminar socio.", true);
+                        }
+                    });
+                }
+
+                if (action === 'edit') {
+                    const socioRef = doc(db, "socios", id);
+                    const socioSnap = await getDoc(socioRef);
+                    if (socioSnap.exists()) {
+                        const socio = socioSnap.data();
+                        document.getElementById('socio-modal-title').textContent = 'Editar Socio';
+                        socioForm.dataset.editingId = id;
+                        document.getElementById('nombre-socio').value = socio.nombre;
+                        document.getElementById('apellidos-socio').value = socio.apellidos;
+                        document.getElementById('dni-socio').value = socio.dni;
+                        fotoSocioPreview.src = socio.url_foto_id || '';
+                        fotoSocioPreview.classList.toggle('hidden', !socio.url_foto_id);
+                        toggleModal(socioModal, true);
+                    }
+                }
+
+                if (action === 'view-details') {
+                    const socioRef = doc(db, "socios", id);
+                    const socioSnap = await getDoc(socioRef);
+                    if (socioSnap.exists()) {
+                        const socio = socioSnap.data();
+                        document.getElementById('socio-details-name').textContent = `${socio.nombre} ${socio.apellidos}`;
+                        document.getElementById('socio-details-id').textContent = id.substring(0,6);
+                        document.getElementById('socio-details-photo').src = socio.url_foto_id || 'https://i.pravatar.cc/150?u=' + id;
+                        const caducidad = socio.fecha_caducidad_pago ? formatFirebaseTimestamp(socio.fecha_caducidad_pago).split(',')[0] : 'N/A';
+                        document.getElementById('socio-details-expiry').textContent = caducidad;
+
+                        const qrContainer = document.getElementById('socio-details-qr');
+                        qrContainer.innerHTML = '';
+                        qrCodeInstance = new QRCode(qrContainer, {
+                            text: id, width: 144, height: 144, colorDark : "#0f172a", colorLight : "#ffffff"
+                        });
+                        toggleModal(detailsModal, true);
+                    }
+                }
+
+                if (action === 'change-status') {
+                    showConfirmationModal(`¿Seguro que quieres cambiar el estado de este socio?`, 'Confirmar', async () => {
+                        let newEstado;
+                        let fechaCaducidad = null;
+                        if (estado === 'Gris') {
+                            newEstado = 'Verde';
+                            const futureDate = new Date();
+                            futureDate.setDate(futureDate.getDate() + 365);
+                            fechaCaducidad = futureDate;
+                        } else if (estado === 'Verde') {
+                            newEstado = 'Rojo';
+                        } else { // Rojo
+                            newEstado = 'Gris';
+                        }
+                        try {
+                            await updateDoc(doc(db, "socios", id), { estado: newEstado, fecha_caducidad_pago: fechaCaducidad });
+                            showToast("Estado actualizado.");
+                        } catch (error) {
+                            showToast("Error al actualizar estado.", true);
+                        }
+                    });
+                }
+            });
+
+            closeDetailsBtn.addEventListener('click', () => toggleModal(detailsModal, false));
+            document.getElementById(detailsModal).addEventListener('click', (e) => {
+                if(e.target.id === detailsModal) toggleModal(detailsModal, false);
+            });
+        }
+
+        // =================================================================================
+        // ARTICULOS MODULE
+        // =================================================================================
+        function initArticulosModule() {
+            const listContainer = document.getElementById('articulos-list');
+            const searchInput = document.getElementById('search-articulo');
+            const addArticuloBtn = document.getElementById('add-articulo-button');
+            const addFirstArticuloBtn = document.getElementById('add-first-articulo-button');
+            const articuloModal = 'articulo-modal-overlay';
+            const articuloForm = document.getElementById('articulo-form');
+            const cancelArticuloBtn = document.getElementById('cancel-articulo-button');
+            const saveArticuloBtn = document.getElementById('save-articulo-button');
+            const skeleton = document.getElementById('articulos-skeleton-loader');
+            const emptyState = document.getElementById('articulos-empty-state');
+            const categoriasDatalist = document.getElementById('categorias-list');
+
+            const rechargeModal = 'recharge-stock-modal-overlay';
+            const rechargeForm = document.getElementById('recharge-stock-form');
+            const cancelRechargeBtn = document.getElementById('cancel-recharge-button');
+
+            function renderArticulos(docs) {
+                listContainer.innerHTML = '';
+                if (docs.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+                emptyState.classList.add('hidden');
+
+                const allCategories = new Set();
+                const articulosPorCategoria = docs.reduce((acc, doc) => {
+                    const article = { id: doc.id, ...doc.data() };
+                    const category = article.categoria || 'Sin Categoría';
+                    allCategories.add(category);
+                    if (!acc[category]) acc[category] = [];
+                    acc[category].push(article);
+                    return acc;
+                }, {});
+
+                categoriasDatalist.innerHTML = '';
+                Array.from(allCategories).sort().forEach(cat => {
+                    categoriasDatalist.innerHTML += `<option value="${cat}">`;
+                });
+
+                const sortedCategories = Object.keys(articulosPorCategoria).sort();
+
+                sortedCategories.forEach(category => {
+                    const categoryContainer = document.createElement('div');
+                    categoryContainer.className = 'category-container';
+                    categoryContainer.innerHTML = `<h3 class="text-xl font-semibold text-emerald-400 mb-3">${category}</h3>`;
+
+                    const grid = document.createElement('div');
+                    grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4';
+
+                    articulosPorCategoria[category].sort((a,b) => a.nombre.localeCompare(b.nombre)).forEach(article => {
+                        const card = document.createElement('div');
+                        card.className = 'articulo-card bg-slate-800 rounded-lg shadow-lg p-4 flex flex-col justify-between transition-colors duration-200 hover:bg-slate-700/50';
+                        card.dataset.nombre = article.nombre.toLowerCase();
+
+                        card.innerHTML = `
+                            <div>
+                                <h4 class="font-bold text-white text-lg">${article.nombre}</h4>
+                                <p class="text-slate-400 text-sm">Stock: <span class="font-semibold">${article.stock || 0}</span></p>
+                                <p class="text-slate-400 text-sm">Precio: <span class="font-semibold">${(article.precio || 0).toFixed(2)}€</span></p>
+                            </div>
+                            <div class="flex justify-end space-x-2 mt-4">
+                                <button class="action-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm" data-action="recharge" data-id="${article.id}">Recargar</button>
+                                <button class="action-btn bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded text-sm" data-action="edit" data-id="${article.id}">Editar</button>
+                                <button class="action-btn bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm" data-action="delete" data-id="${article.id}" data-nombre="${article.nombre}">Eliminar</button>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+
+                    categoryContainer.appendChild(grid);
+                    listContainer.appendChild(categoryContainer);
+                });
+            }
+
+            const q = query(collection(db, "articulos"), orderBy("categoria"), orderBy("nombre"));
+            onSnapshot(q, (snapshot) => {
+                skeleton.classList.add('hidden');
+                renderArticulos(snapshot.docs);
+            }, (error) => {
+                console.error("Error listening to articulos:", error);
+                skeleton.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.querySelector('p').textContent = "Error al cargar los artículos.";
+            });
+
+            addArticuloBtn.addEventListener('click', () => {
+                articuloForm.reset();
+                articuloForm.removeAttribute('data-editing-id');
+                document.getElementById('articulo-modal-title').textContent = 'Añadir Artículo';
+                toggleModal(articuloModal, true);
+            });
+            addFirstArticuloBtn.addEventListener('click', () => addArticuloBtn.click());
+
+            cancelArticuloBtn.addEventListener('click', () => toggleModal(articuloModal, false));
+            document.getElementById(articuloModal).addEventListener('click', (e) => {
+                if(e.target.id === articuloModal) toggleModal(articuloModal, false);
+            });
+
+            articuloForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const editingId = articuloForm.dataset.editingId;
+                const articleData = {
+                    nombre: document.getElementById('nombre-articulo').value,
+                    precio: parseFloat(document.getElementById('precio-articulo').value),
+                    categoria: document.getElementById('categoria-articulo').value,
+                    unidades: parseFloat(document.getElementById('unidades-articulo').value),
+                    stock: editingId ? undefined : parseInt(document.getElementById('stock-articulo').value)
+                };
+
+                if (!articleData.nombre || !articleData.precio || !articleData.categoria || !articleData.unidades) {
+                    return showToast("Todos los campos son obligatorios", true);
+                }
+
+                const btnText = saveArticuloBtn.querySelector('.btn-text');
+                const spinner = saveArticuloBtn.querySelector('.spinner');
+                btnText.textContent = 'Guardando...';
+                spinner.classList.remove('hidden');
+                saveArticuloBtn.disabled = true;
+
+                try {
+                    if(editingId) {
+                        delete articleData.stock; // Do not update stock on edit
+                        await updateDoc(doc(db, "articulos", editingId), articleData);
+                        showToast("Artículo actualizado.");
+                    } else {
+                        articleData.createdAt = serverTimestamp();
+                        await addDoc(collection(db, "articulos"), articleData);
+                        showToast("Artículo añadido.");
+                    }
+                    toggleModal(articuloModal, false);
+                } catch(err) {
+                    showToast("Error al guardar el artículo.", true);
+                    console.error(err);
+                } finally {
+                    btnText.textContent = 'Guardar';
+                    spinner.classList.add('hidden');
+                    saveArticuloBtn.disabled = false;
+                }
+            });
+
+            listContainer.addEventListener('click', async e => {
+                const button = e.target.closest('.action-btn');
+                if (!button) return;
+                const { action, id, nombre } = button.dataset;
+
+                if (action === 'delete') {
+                    showConfirmationModal(`¿Seguro que quieres eliminar ${nombre}?`, 'Eliminar', async () => {
+                        try {
+                            await deleteDoc(doc(db, "articulos", id));
+                            await addDoc(collection(db, "historial"), {
+                                tipo: "eliminacion",
+                                descripcion: `Artículo "${nombre}" ha sido eliminado.`,
+                                fecha: serverTimestamp()
+                            });
+                            showToast("Artículo eliminado.");
+                        } catch (error) { showToast("Error al eliminar.", true); }
+                    });
+                }
+
+                if (action === 'edit') {
+                    const articleSnap = await getDoc(doc(db, "articulos", id));
+                    if (articleSnap.exists()) {
+                        const data = articleSnap.data();
+                        document.getElementById('articulo-modal-title').textContent = 'Editar Artículo';
+                        articuloForm.dataset.editingId = id;
+                        document.getElementById('nombre-articulo').value = data.nombre;
+                        document.getElementById('precio-articulo').value = data.precio;
+                        document.getElementById('stock-articulo').value = data.stock;
+                        document.getElementById('stock-articulo').readOnly = true; // Stock no se edita aquí
+                        document.getElementById('categoria-articulo').value = data.categoria;
+                        document.getElementById('unidades-articulo').value = data.unidades;
+                        toggleModal(articuloModal, true);
+                    }
+                }
+
+                if (action === 'recharge') {
+                    rechargeForm.querySelector('#recharge-stock-id').value = id;
+                    toggleModal(rechargeModal, true);
+                }
+            });
+
+            rechargeForm.addEventListener('submit', async e => {
+                e.preventDefault();
+                const id = document.getElementById('recharge-stock-id').value;
+                const amount = parseInt(document.getElementById('recharge-amount').value);
+                if (!amount || amount <= 0) return showToast("La cantidad debe ser positiva.", true);
+
+                const btnText = rechargeForm.querySelector('.btn-text');
+                const spinner = rechargeForm.querySelector('.spinner');
+                btnText.textContent = 'Recargando...';
+                spinner.classList.remove('hidden');
+                rechargeForm.querySelector('button[type="submit"]').disabled = true;
+
+                try {
+                    await updateDoc(doc(db, "articulos", id), { stock: increment(amount) });
+                    const articleName = (await getDoc(doc(db, "articulos", id))).data().nombre;
+                    await addDoc(collection(db, "historial"), {
+                        tipo: "recarga",
+                        descripcion: `Recarga de ${amount} uds. de "${articleName}"`,
+                        fecha: serverTimestamp()
+                    });
+                    showToast("Stock actualizado.");
+                    toggleModal(rechargeModal, false);
+                } catch(err) {
+                    showToast("Error al recargar.", true);
+                } finally {
+                    btnText.textContent = 'Recargar';
+                    spinner.classList.add('hidden');
+                    rechargeForm.querySelector('button[type="submit"]').disabled = false;
+                }
+            });
+
+            cancelRechargeBtn.addEventListener('click', () => toggleModal(rechargeModal, false));
+            document.getElementById(rechargeModal).addEventListener('click', (e) => {
+                if(e.target.id === rechargeModal) toggleModal(rechargeModal, false);
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                document.querySelectorAll('.category-container').forEach(cat => {
+                    let hasVisible = false;
+                    cat.querySelectorAll('.articulo-card').forEach(card => {
+                        const isVisible = card.dataset.nombre.includes(searchTerm);
+                        card.classList.toggle('hidden', !isVisible);
+                        if (isVisible) hasVisible = true;
+                    });
+                    cat.classList.toggle('hidden', !hasVisible);
+                });
+            });
+        }
+
+        // =================================================================================
+        // TPV MODULE
+        // =================================================================================
+        function initTpvModule() {
+            const socioSelect = document.getElementById('tpv-socio-select');
+            const articuloSelect = document.getElementById('tpv-articulo-select');
+            const cantidadInput = document.getElementById('tpv-cantidad');
+            const precioInput = document.getElementById('tpv-precio');
+            const resumenSocio = document.getElementById('resumen-socio');
+            const resumenArticulo = document.getElementById('resumen-articulo');
+            const resumenCantidad = document.getElementById('resumen-cantidad');
+            const resumenTotal = document.getElementById('resumen-total');
+            const dispensaBtn = document.getElementById('realizar-dispensa-btn');
+
+            onSnapshot(query(collection(db, "socios"), orderBy("apellidos")), snapshot => {
+                socioSelect.innerHTML = '<option value="" disabled selected>Seleccione socio</option>';
+                snapshot.forEach(doc => socioSelect.innerHTML += `<option value="${doc.id}">${doc.data().nombre} ${doc.data().apellidos}</option>`);
+            });
+
+            onSnapshot(query(collection(db, "articulos"), orderBy("nombre")), snapshot => {
+                articuloSelect.innerHTML = '<option value="" disabled selected>Seleccione artículo</option>';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    articuloSelect.innerHTML += `<option value="${doc.id}" data-precio="${data.precio}">${data.nombre}</option>`;
+                });
+            });
+
+            function updateTpvSummary() {
+                const socioOption = socioSelect.options[socioSelect.selectedIndex];
+                const articuloOption = articuloSelect.options[articuloSelect.selectedIndex];
+                const cantidad = parseFloat(cantidadInput.value) || 0;
+
+                resumenSocio.textContent = socioOption.value ? socioOption.text : '--';
+                resumenArticulo.textContent = articuloOption.value ? articuloOption.text : '--';
+                resumenCantidad.textContent = cantidad > 0 ? cantidad : '--';
+
+                if (articuloOption.value) {
+                    precioInput.value = parseFloat(articuloOption.dataset.precio).toFixed(2);
+                } else {
+                    precioInput.value = '0.00';
+                }
+
+                const total = cantidad * parseFloat(precioInput.value);
+                resumenTotal.textContent = `${total.toFixed(2)} €`;
+
+                dispensaBtn.disabled = !(socioOption.value && articuloOption.value && cantidad > 0);
+            }
+
+            [socioSelect, articuloSelect, cantidadInput].forEach(el => el.addEventListener('input', updateTpvSummary));
+
+            dispensaBtn.addEventListener('click', async () => {
+                const socioId = socioSelect.value;
+                const articuloId = articuloSelect.value;
+                const cantidad = parseFloat(cantidadInput.value);
+
+                dispensaBtn.disabled = true;
+                dispensaBtn.textContent = 'Procesando...';
+
+                try {
+                    await runTransaction(db, async (transaction) => {
+                        const articuloRef = doc(db, "articulos", articuloId);
+                        const articuloDoc = await transaction.get(articuloRef);
+                        if (!articuloDoc.exists() || articuloDoc.data().stock < cantidad) {
+                            throw new Error("Stock insuficiente o artículo no encontrado.");
+                        }
+                        transaction.update(articuloRef, { stock: increment(-cantidad) });
+
+                        const dispensaData = {
+                            socioId,
+                            articuloId,
+                            cantidad,
+                            precioTotal: cantidad * articuloDoc.data().precio,
+                            fecha: serverTimestamp(),
+                            nombreSocio: socioSelect.options[socioSelect.selectedIndex].text,
+                            nombreArticulo: articuloSelect.options[articuloSelect.selectedIndex].text,
+                        };
+                        transaction.set(doc(collection(db, "dispensas")), dispensaData);
+                        transaction.set(doc(collection(db, "historial")), {
+                            tipo: 'dispensa',
+                            descripcion: `Dispensa de ${cantidad} uds. de "${dispensaData.nombreArticulo}" a "${dispensaData.nombreSocio}"`,
+                            fecha: serverTimestamp()
+                        });
+                    });
+                    showToast("Dispensa realizada con éxito.");
+                    document.getElementById('tpv-form').reset();
+                    updateTpvSummary();
+                } catch(err) {
+                    showToast(err.message, true);
+                    console.error(err);
+                } finally {
+                    dispensaBtn.disabled = false;
+                    dispensaBtn.textContent = 'REALIZAR DISPENSA';
+                }
+            });
+        }
+
+        // =================================================================================
+        // HISTORIAL MODULE
+        // =================================================================================
+        function initHistorialModule() {
+            const list = document.getElementById('historial-list');
+            const q = query(collection(db, "historial"), orderBy("fecha", "desc"));
+
+            onSnapshot(q, snapshot => {
+                list.innerHTML = snapshot.empty ? '<p class="text-slate-400 text-center">No hay historial.</p>' : '';
+                snapshot.forEach(doc => {
+                    const event = doc.data();
+                    const icon = event.tipo === 'dispensa' ? '🛒' : (event.tipo === 'recarga' ? '📦' : '🗑️');
+                    const color = event.tipo === 'dispensa' ? 'border-blue-500' : (event.tipo === 'recarga' ? 'border-green-500' : 'border-red-500');
+                    list.innerHTML += `
+                        <li class="p-3 flex items-start gap-4 ${color} border-l-4">
+                            <span class="text-xl mt-1">${icon}</span>
+                            <div>
+                                <p class="text-white">${event.descripcion}</p>
+                                <p class="text-sm text-slate-400">${formatFirebaseTimestamp(event.fecha)}</p>
+                            </div>
+                        </li>
+                    `;
+                });
+            });
+        }
+
+        // --- UTILITY FUNCTIONS ---
+        function formatFirebaseTimestamp(timestamp) {
+            if (!timestamp || typeof timestamp.toDate !== 'function') return 'Fecha no disponible';
+            return timestamp.toDate().toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' });
+        }
+
+        function showConfirmationModal(message, confirmText, onConfirm) {
+            document.getElementById('confirmation-modal-message').textContent = message;
+            const confirmBtn = document.getElementById('confirmation-modal-confirm');
+            confirmBtn.textContent = confirmText;
+            confirmBtn.className = confirmBtn.className.replace(/bg-\w+-\d+/, confirmText === 'Eliminar' ? 'bg-red-600' : 'bg-emerald-600');
+
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+
+            newConfirmBtn.addEventListener('click', () => {
+                onConfirm();
+                toggleModal('confirmation-modal-overlay', false);
+            });
+
+            toggleModal('confirmation-modal-overlay', true);
+        }
+        document.getElementById('confirmation-modal-cancel').addEventListener('click', () => toggleModal('confirmation-modal-overlay', false));
+        document.getElementById('confirmation-modal-overlay').addEventListener('click', e => {
+            if (e.target.id === 'confirmation-modal-overlay') toggleModal('confirmation-modal-overlay', false);
+        });
+
+        // Kebab menu global listener
+        document.body.addEventListener('click', function(event) {
+            const openMenus = document.querySelectorAll('.kebab-menu-dropdown.open');
+            let isKebabButtonClick = event.target.closest('.kebab-menu-button');
+
+            openMenus.forEach(menu => {
+                if (!isKebabButtonClick || menu.previousElementSibling !== isKebabButtonClick) {
+                     menu.classList.remove('open');
+                }
+            });
+
+            if (isKebabButtonClick) {
+                const dropdown = isKebabButtonClick.nextElementSibling;
+                if (dropdown && dropdown.classList.contains('kebab-menu-dropdown')) {
+                    dropdown.classList.toggle('open');
+                }
+            }
+        });
+
+    </script>
 </body>
 </html>
