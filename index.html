@@ -11,6 +11,8 @@
         .hidden { display: none; }
         .view { transition: opacity 0.3s ease-in-out; }
     </style>
+    <!-- Chart.js via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body class="min-h-screen p-4 bg-gray-900">
@@ -203,7 +205,12 @@
                     </div>
                 </div>
             </section>
-            <section id="stats-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Estadísticas</h2><p class="text-gray-400">Próximamente...</p></section>
+            <section id="stats-view" class="view hidden">
+                <h2 class="text-2xl font-bold mb-4">Estadísticas de Ventas (Últimos 7 días)</h2>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <canvas id="grafico-ventas-semanal"></canvas>
+                </div>
+            </section>
             
             <section id="historial-section" class="view hidden">
                  <h2 class="text-2xl font-bold mb-4">Historial de Operaciones</h2>
@@ -259,7 +266,7 @@
         // Importa las funciones que necesitas de los SDKs de Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment, runTransaction, getDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment, runTransaction, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
 
         // ==========================================================================================
@@ -319,6 +326,11 @@
                     viewTitle.textContent = 'Menú Principal';
                 } else {
                     viewTitle.textContent = activeView.querySelector('h2').textContent;
+                }
+
+                // Si la vista es la de estadísticas, renderizar el gráfico
+                if (viewId === 'stats-view') {
+                    renderizarGraficoVentas();
                 }
             }
         }
@@ -1069,6 +1081,118 @@
                     historialContainer.appendChild(eventoElement);
                 });
             });
+        }
+
+        // --- MÓDULO DE ESTADÍSTICAS (GRÁFICOS) ---
+        let ventasChartInstance = null;
+        async function renderizarGraficoVentas() {
+            const ctx = document.getElementById('grafico-ventas-semanal').getContext('2d');
+
+            // 1. Destruir instancia de gráfico anterior si existe
+            if (ventasChartInstance) {
+                ventasChartInstance.destroy();
+            }
+
+            try {
+                // 2. Calcular el rango de fechas (últimos 7 días)
+                const hoy = new Date();
+                const fechaHace7Dias = new Date();
+                fechaHace7Dias.setDate(hoy.getDate() - 7);
+                fechaHace7Dias.setHours(0, 0, 0, 0); // Empezar desde el inicio del día
+
+                // 3. Consultar TODAS las ventas y filtrar en el cliente para evitar problemas de índices
+                const ventasRef = collection(db, "ventas");
+                const q = query(ventasRef); // Sin filtro 'where'
+                const querySnapshot = await getDocs(q);
+
+                // 4. Procesar y agregar datos por día
+                const ventasPorDia = {}; // { 'YYYY-MM-DD': total, ... }
+                querySnapshot.forEach(doc => {
+                    const venta = doc.data();
+                    if (venta.fecha && venta.fecha.toDate) {
+                        const fechaVenta = venta.fecha.toDate();
+
+                        // Filtrado en el lado del cliente
+                        if (fechaVenta >= fechaHace7Dias) {
+                            // Formato YYYY-MM-DD para usar como clave
+                            const diaKey = fechaVenta.toISOString().split('T')[0];
+
+                            if (!ventasPorDia[diaKey]) {
+                                ventasPorDia[diaKey] = 0;
+                            }
+                            ventasPorDia[diaKey] += venta.precioTotal;
+                        }
+                    }
+                });
+
+                // 5. Preparar labels y data para el gráfico
+                const labels = [];
+                const data = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    d.setHours(0,0,0,0);
+                    const diaKey = d.toISOString().split('T')[0];
+                    // Formatear la label para mostrar en el gráfico (ej: Oct 16)
+                    const labelFormatted = d.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+
+                    labels.push(labelFormatted);
+                    data.push(ventasPorDia[diaKey] || 0);
+                }
+
+                // 6. Renderizar el nuevo gráfico
+                ventasChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Ventas Totales (€)',
+                            data: data,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#9CA3AF' // Color de los ticks del eje Y (gris claro)
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)' // Color de las líneas de la cuadrícula
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#9CA3AF' // Color de los ticks del eje X
+                                },
+                                 grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)' // Color de las líneas de la cuadrícula
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#E5E7EB' // Color del texto de la leyenda
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error renderizando el gráfico de ventas:", error);
+                // Opcional: Mostrar un mensaje de error en el canvas
+                ctx.font = "16px Arial";
+                ctx.fillStyle = "red";
+                ctx.textAlign = "center";
+                ctx.fillText("No se pudieron cargar los datos del gráfico.", ctx.canvas.width / 2, 50);
+            }
         }
         
     </script>
