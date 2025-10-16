@@ -7,6 +7,7 @@
     <title>Gestor del Club v2</title>
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         .hidden { display: none; }
         .view { transition: opacity 0.3s ease-in-out; }
@@ -38,15 +39,6 @@
     </div>
 
     <div id="app-container" class="hidden w-full max-w-6xl mx-auto">
-        <div id="view-id-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-            <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
-                <h2 class="text-2xl font-bold mb-4">Foto del ID</h2>
-                <img id="id-photo-container" src="" alt="Foto del ID" class="rounded-lg max-h-96 mx-auto"/>
-                <div class="flex justify-end mt-4">
-                    <button type="button" id="close-view-id-modal" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded">Cerrar</button>
-                </div>
-            </div>
-        </div>
         <header class="flex justify-between items-center mb-6">
             <h1 id="view-title" class="text-3xl font-bold">Menú Principal</h1>
             <div>
@@ -82,6 +74,13 @@
             </section>
 
             <section id="socios" class="view hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Socios</h2>
+                    <button id="show-add-socio-modal" class="bg-blue-600 text-white hover:bg-blue-700 py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Añadir Socio
+                    </button>
+                </div>
                 <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
                     <table class="w-full text-sm text-left text-gray-400">
                         <thead class="text-xs text-gray-400 uppercase bg-gray-700">
@@ -97,9 +96,6 @@
                         </tbody>
                     </table>
                 </div>
-                <button id="show-add-socio-modal" class="fixed bottom-10 right-10 bg-blue-600 hover:bg-blue-700 text-white font-bold w-16 h-16 rounded-full shadow-lg flex items-center justify-center text-3xl">
-                    +
-                </button>
             </section>
             
             <section id="articles-view" class="view hidden space-y-8">
@@ -149,25 +145,64 @@
         </main>
     </div>
     
-    <div id="add-socio-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4">
-        <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
-            <h2 class="text-2xl font-bold mb-4">Añadir Socio</h2>
-            <form id="add-socio-form">
+    <div id="toast-container" class="fixed top-5 right-5 z-50"></div>
+
+    <!-- Modal para la Tarjeta de Identificación del Socio -->
+    <div id="modal-id-socio" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50" onclick="cerrarModalId()">
+        <div class="bg-white text-gray-800 rounded-lg shadow-xl w-full max-w-sm" onclick="event.stopPropagation()">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold text-gray-900">Identificación de Socio</h2>
+                    <button onclick="cerrarModalId()" class="text-gray-500 hover:text-gray-800">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="text-center mb-6">
+                    <div id="qr-code-container" class="flex justify-center"></div>
+                </div>
+                <div class="space-y-3">
+                    <p class="text-lg"><strong class="font-semibold">Nombre:</strong> <span id="modal-nombre"></span></p>
+                    <p class="text-lg"><strong class="font-semibold">Estado:</strong> <span id="modal-estado"></span></p>
+                    <p class="text-sm text-gray-500"><strong class="font-semibold">ID:</strong> <span id="modal-doc-id"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-socio-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+        <div id="add-socio-modal-content" class="relative bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md z-50">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Añadir Socio</h2>
+                <button id="close-add-socio-modal" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="add-socio-form" novalidate>
+                <div id="form-error" class="hidden text-red-400 text-sm mb-4 p-3 bg-red-900/50 rounded-lg"></div>
                 <div class="mb-4">
                     <label for="socio-nombre" class="block mb-2 text-sm font-medium text-gray-300">Nombre</label>
                     <input type="text" id="socio-nombre" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    <div id="error-nombre" class="text-red-400 text-sm mt-1"></div>
                 </div>
                 <div class="mb-4">
                     <label for="socio-apellido" class="block mb-2 text-sm font-medium text-gray-300">Apellido</label>
                     <input type="text" id="socio-apellido" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    <div id="error-apellido" class="text-red-400 text-sm mt-1"></div>
                 </div>
                 <div class="mb-4">
                     <label for="socio-id-photo" class="block mb-2 text-sm font-medium text-gray-300">Foto del ID</label>
-                    <input type="file" id="socio-id-photo" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    <input type="file" id="socio-id-photo" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                    <div id="error-foto" class="text-red-400 text-sm mt-1"></div>
                 </div>
-                <div class="flex justify-end space-x-4">
-                    <button type="button" id="cancel-add-socio" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded">Cancelar</button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded">Guardar</button>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" id="cancel-add-socio" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" id="submit-socio-btn" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-lg flex items-center">
+                        <span class="btn-text">Guardar</span>
+                        <svg class="spinner hidden w-5 h-5 ml-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
                 </div>
             </form>
         </div>
@@ -289,9 +324,11 @@
         
         // --- MÓDULO DE SOCIOS ---
         const sociosList = document.getElementById('socios-list');
-        const addSocioModal = document.getElementById('add-socio-modal');
+        const addSocioModalOverlay = document.getElementById('add-socio-modal-overlay');
         const addSocioForm = document.getElementById('add-socio-form');
         const socioIdPhotoInput = document.getElementById('socio-id-photo');
+        const closeAddSocioModalBtn = document.getElementById('close-add-socio-modal');
+        const cancelAddSocioBtn = document.getElementById('cancel-add-socio');
 
         function getSociosCollectionRef() {
             if (!currentUser || !firebaseConfig.appId) {
@@ -379,7 +416,17 @@
                             </td>
                             <td class="py-4 px-6">
                                 <button data-id="${doc.id}" data-estado="${socio.estado}" class="change-status-btn text-blue-400 hover:underline">Cambiar Estado</button>
-                                <button data-id="${doc.id}" data-url="${socio.url_foto_id}" class="view-id-btn text-blue-400 hover:underline ml-4" ${!socio.url_foto_id ? 'disabled' : ''}>Ver ID</button>
+                                <button
+                                    class="view-id-btn text-blue-400 hover:underline ml-4"
+                                    data-id="${doc.id}"
+                                    data-nombre="${socio.nombre}"
+                                    data-apellido="${socio.apellido}"
+                                    data-estado="${estadoFinal}"
+                                    data-foto-url="${socio.url_foto_id || ''}"
+                                    onclick="mostrarModalId(this)"
+                                    ${!socio.url_foto_id ? 'disabled' : ''}>
+                                    Ver ID
+                                </button>
                             </td>
                         </tr>
                     `;
@@ -390,45 +437,93 @@
 
         addSocioForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const nombre = document.getElementById('socio-nombre').value;
-            const apellido = document.getElementById('socio-apellido').value;
+
+            // Validación
+            const nombre = document.getElementById('socio-nombre').value.trim();
+            const apellido = document.getElementById('socio-apellido').value.trim();
             const file = socioIdPhotoInput.files[0];
+            let isValid = true;
 
-            const sociosCollectionRef = getSociosCollectionRef();
-            if (!sociosCollectionRef) return;
+            // Limpiar errores previos
+            document.getElementById('error-nombre').textContent = '';
+            document.getElementById('error-apellido').textContent = '';
+            document.getElementById('error-foto').textContent = '';
+            document.getElementById('form-error').classList.add('hidden');
 
-            // Step 1: Create the document in Firestore to get an ID
-            const newSocioRef = doc(sociosCollectionRef);
-
-            const newSocioData = {
-                nombre,
-                apellido,
-                estado: 'Gris',
-                fecha_ingreso: serverTimestamp(),
-                fecha_caducidad_pago: null,
-                url_foto_id: '' // Initialize with empty string
-            };
-
-            // Set the initial data
-            await setDoc(newSocioRef, newSocioData);
-
-            // Step 2: If there's a file, optimize and upload it
-            if (file) {
-                const optimizedBlob = await optimizeImage(file);
-                const storageRef = ref(storage, `socios_ids/${newSocioRef.id}.jpg`);
-                await uploadBytes(storageRef, optimizedBlob);
-
-                // Step 3: Get the download URL
-                const downloadURL = await getDownloadURL(storageRef);
-
-                // Step 4: Update the document with the URL
-                await updateDoc(newSocioRef, {
-                    url_foto_id: downloadURL
-                });
+            if (!nombre) {
+                document.getElementById('error-nombre').textContent = 'El nombre es obligatorio.';
+                isValid = false;
+            }
+            if (!apellido) {
+                document.getElementById('error-apellido').textContent = 'El apellido es obligatorio.';
+                isValid = false;
+            }
+            if (!file) {
+                document.getElementById('error-foto').textContent = 'La foto del DNI es obligatoria.';
+                isValid = false;
             }
 
-            addSocioForm.reset();
-            addSocioModal.classList.add('hidden');
+            if (!isValid) return;
+
+            const submitBtn = document.getElementById('submit-socio-btn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const spinner = submitBtn.querySelector('.spinner');
+
+            // --- Feedback de envío ---
+            submitBtn.disabled = true;
+            btnText.textContent = 'Guardando...';
+            spinner.classList.remove('hidden');
+
+            try {
+                const sociosCollectionRef = getSociosCollectionRef();
+                if (!sociosCollectionRef) {
+                    throw new Error('Error de autenticación. Inténtalo de nuevo.');
+                }
+
+                // Step 1: Create the document in Firestore to get an ID
+                const newSocioRef = doc(sociosCollectionRef);
+
+                const newSocioData = {
+                    nombre,
+                    apellido,
+                    estado: 'Gris',
+                    fecha_ingreso: serverTimestamp(),
+                    fecha_caducidad_pago: null,
+                    url_foto_id: '' // Initialize with empty string
+                };
+
+                // Set the initial data
+                await setDoc(newSocioRef, newSocioData);
+
+                // Step 2: If there's a file, optimize and upload it
+                if (file) {
+                    const optimizedBlob = await optimizeImage(file);
+                    const storageRef = ref(storage, `socios_ids/${newSocioRef.id}.jpg`);
+                    await uploadBytes(storageRef, optimizedBlob);
+
+                    // Step 3: Get the download URL
+                    const downloadURL = await getDownloadURL(storageRef);
+
+                    // Step 4: Update the document with the URL
+                    await updateDoc(newSocioRef, {
+                        url_foto_id: downloadURL
+                    });
+                }
+
+                showToast('Socio añadido correctamente.');
+                closeSocioModal();
+
+            } catch (error) {
+                console.error("Error al guardar el socio:", error);
+                showToast('Error al guardar el socio.', true);
+                document.getElementById('form-error').textContent = error.message;
+                document.getElementById('form-error').classList.remove('hidden');
+            } finally {
+                // --- Restaurar botón ---
+                submitBtn.disabled = false;
+                btnText.textContent = 'Guardar';
+                spinner.classList.add('hidden');
+            }
         });
 
         sociosList.addEventListener('click', async (e) => {
@@ -460,24 +555,72 @@
             }
 
             if (e.target.classList.contains('view-id-btn')) {
-                const photoUrl = e.target.dataset.url;
-                if (photoUrl) {
-                    const viewIdModal = document.getElementById('view-id-modal');
-                    const idPhotoContainer = document.getElementById('id-photo-container');
-                    idPhotoContainer.src = photoUrl;
-                    viewIdModal.classList.remove('hidden');
-                }
+                // This logic is now handled by the `mostrarModalId` function
             }
         });
 
-        document.getElementById('close-view-id-modal').addEventListener('click', () => {
-            document.getElementById('view-id-modal').classList.add('hidden');
-        });
+        // --- ID CARD MODAL ---
+        window.mostrarModalId = (boton) => {
+            const idSocio = boton.dataset.id;
+            const nombre = boton.dataset.nombre;
+            const apellido = boton.dataset.apellido;
+            const estado = boton.dataset.estado;
 
-        document.getElementById('show-add-socio-modal').addEventListener('click', () => addSocioModal.classList.remove('hidden'));
-        document.getElementById('cancel-add-socio').addEventListener('click', () => {
+            document.getElementById('modal-nombre').textContent = `${nombre} ${apellido}`;
+            document.getElementById('modal-estado').textContent = estado;
+            document.getElementById('modal-doc-id').textContent = idSocio;
+
+            const qrContainer = document.getElementById('qr-code-container');
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: idSocio,
+                width: 128,
+                height: 128,
+            });
+
+            document.getElementById('modal-id-socio').classList.remove('hidden');
+        }
+
+        window.cerrarModalId = () => {
+            document.getElementById('modal-id-socio').classList.add('hidden');
+        }
+
+        // --- TOAST NOTIFICATION ---
+        function showToast(message, isError = false) {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const baseClasses = 'p-4 rounded-lg shadow-lg text-white mb-2 transition-all duration-300';
+            const bgColor = isError ? 'bg-red-600' : 'bg-green-600';
+            toast.className = `${baseClasses} ${bgColor}`;
+            toast.textContent = message;
+
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function closeSocioModal() {
             addSocioForm.reset();
-            addSocioModal.classList.add('hidden');
+            addSocioModalOverlay.classList.add('hidden');
+            // Limpiar errores
+            document.getElementById('error-nombre').textContent = '';
+            document.getElementById('error-apellido').textContent = '';
+            document.getElementById('error-foto').textContent = '';
+            document.getElementById('form-error').classList.add('hidden');
+        }
+
+        document.getElementById('show-add-socio-modal').addEventListener('click', () => addSocioModalOverlay.classList.remove('hidden'));
+
+        cancelAddSocioBtn.addEventListener('click', closeSocioModal);
+        closeAddSocioModalBtn.addEventListener('click', closeSocioModal);
+
+        addSocioModalOverlay.addEventListener('click', (e) => {
+            if (e.target === addSocioModalOverlay) {
+                closeSocioModal();
+            }
         });
 
         // --- MÓDULO DE ARTÍCULOS (STOCK) ---
