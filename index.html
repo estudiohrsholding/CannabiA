@@ -13,6 +13,8 @@
     </style>
     <!-- Chart.js via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- QR Code Generator Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 
 <body class="min-h-screen flex flex-col items-center justify-center bg-slate-900 p-4">
@@ -232,9 +234,21 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div id="socio-details-content" class="overflow-y-auto">
-                <!-- El contenido se cargará aquí dinámicamente -->
-                <p class="text-center p-8">Cargando historial...</p>
+            <div id="socio-details-content" class="overflow-y-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-1 flex flex-col items-center justify-center space-y-4 p-4 bg-gray-700 rounded-lg">
+                    <div id="qr-code-container" class="p-2 bg-white rounded-lg"></div>
+                    <span id="detail-socio-id" class="text-sm text-gray-400"></span>
+                </div>
+                <div class="md:col-span-2 space-y-4">
+                    <div>
+                        <h3 class="text-xl font-bold" id="detail-socio-nombre"></h3>
+                        <p class="text-gray-400">Fecha de Caducidad: <span id="detail-socio-caducidad" class="font-semibold">--</span></p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2">Foto DNI:</h4>
+                        <img id="detail-socio-foto" src="" alt="Foto del DNI" class="rounded-lg max-w-full h-auto max-h-60 object-contain"/>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -261,7 +275,7 @@
                     </div>
                     <div>
                         <label for="article-unidad" class="block mb-2 text-sm font-medium text-gray-300">Unidad Mínima de Dispensa</label>
-                        <input type="number" id="article-unidad" min="1" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                        <input type="number" id="article-unidad" min="0.1" step="0.1" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                     </div>
                     <div>
                         <label for="article-precio" class="block mb-2 text-sm font-medium text-gray-300">Precio por Unidad (€)</label>
@@ -276,12 +290,24 @@
         </div>
     </div>
 
+    <!-- Generic Confirmation Modal -->
+    <div id="confirmation-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-sm">
+            <h2 id="confirmation-modal-title" class="text-xl font-bold mb-4">Confirmar Acción</h2>
+            <p id="confirmation-modal-message" class="text-gray-300 mb-6">¿Estás seguro de que quieres continuar?</p>
+            <div class="flex justify-end space-x-4">
+                <button id="confirmation-modal-cancel-btn" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded-lg">Cancelar</button>
+                <button id="confirmation-modal-confirm-btn" class="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
 
     <script type="module">
         // Importa las funciones que necesitas de los SDKs de Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment, runTransaction, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment, runTransaction, getDoc, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
 
         // ==========================================================================================
@@ -341,8 +367,15 @@
                 
                 if (isMenuView) {
                     viewTitle.textContent = 'Menú Principal';
-                } else {
-                    viewTitle.textContent = activeView.querySelector('h2').textContent;
+                } else if (viewId === 'articulos-section') {
+                    // Special case for articles view, which has a different structure
+                    viewTitle.textContent = 'Artículos';
+                }
+                else {
+                    const newTitle = activeView.querySelector('h2');
+                    if (newTitle) {
+                        viewTitle.textContent = newTitle.textContent;
+                    }
                 }
 
                 // Control de visibilidad de los FABs
@@ -412,56 +445,77 @@
         const socioIdPhotoInput = document.getElementById('socio-id-photo');
         const closeAddSocioModalBtn = document.getElementById('close-add-socio-modal');
         const cancelAddSocioBtn = document.getElementById('cancel-add-socio');
+
+        // --- Modal de Detalles del Socio ---
         const socioDetailsModalOverlay = document.getElementById('socio-details-modal-overlay');
         const socioDetailsModalTitle = document.getElementById('socio-details-modal-title');
-        const socioDetailsContent = document.getElementById('socio-details-content');
         const closeSocioDetailsModalBtn = document.getElementById('close-socio-details-modal');
+        const qrCodeContainer = document.getElementById('qr-code-container');
+        const detailSocioNombre = document.getElementById('detail-socio-nombre');
+        const detailSocioId = document.getElementById('detail-socio-id');
+        const detailSocioCaducidad = document.getElementById('detail-socio-caducidad');
+        const detailSocioFoto = document.getElementById('detail-socio-foto');
+        let qrCodeInstance = null;
 
-        async function showPartnerDetails(socioId, socioNombre) {
-            socioDetailsModalTitle.textContent = `Historial de ${socioNombre}`;
+        async function showPartnerDetails(socioId) {
             socioDetailsModalOverlay.classList.remove('hidden');
-            socioDetailsContent.innerHTML = '<p class="text-center p-8">Cargando historial...</p>';
+
+            // Reset state
+            if (qrCodeInstance) {
+                qrCodeInstance.clear();
+                qrCodeContainer.innerHTML = '';
+            }
+            detailSocioNombre.textContent = 'Cargando...';
+            detailSocioId.textContent = '';
+            detailSocioCaducidad.textContent = '--';
+            detailSocioFoto.src = '';
+            detailSocioFoto.alt = 'Cargando foto...';
 
             try {
-                const dispensasRef = collection(db, "dispensas");
-                const q = query(dispensasRef, where("idSocio", "==", socioId), orderBy("fecha", "desc"));
-                const querySnapshot = await getDocs(q);
+                const sociosCollectionRef = getSociosCollectionRef();
+                if (!sociosCollectionRef) throw new Error("Referencia a socios no encontrada.");
 
-                if (querySnapshot.empty) {
-                    socioDetailsContent.innerHTML = '<p class="text-center p-8 text-gray-400">Este socio no tiene dispensas registradas.</p>';
-                    return;
+                const socioRef = doc(sociosCollectionRef, socioId);
+                const socioSnap = await getDoc(socioRef);
+
+                if (!socioSnap.exists()) {
+                    throw new Error("Socio no encontrado.");
                 }
 
-                let html = '<div class="space-y-3">';
-                querySnapshot.forEach(doc => {
-                    const dispensa = doc.data();
-                    const fecha = formatFirebaseTimestamp(dispensa.fecha);
-                    html += `
-                        <div class="bg-gray-700 p-3 rounded-lg flex justify-between items-center">
-                            <div>
-                                <p class="font-semibold">${dispensa.nombreArticulo}</p>
-                                <p class="text-sm text-gray-400">${fecha}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-bold text-green-400">${dispensa.precioTotal.toFixed(2)} €</p>
-                                <p class="text-sm text-gray-300">Cantidad: ${dispensa.cantidad}</p>
-                            </div>
-                        </div>
-                    `;
+                const socio = socioSnap.data();
+
+                // Populate modal
+                socioDetailsModalTitle.textContent = `Tarjeta de Socio`;
+                detailSocioNombre.textContent = `${socio.nombre} ${socio.apellido}`;
+                detailSocioId.textContent = `Socio #${socioSnap.id.substring(0, 6).toUpperCase()}`;
+
+                const caducidad = socio.fecha_caducidad_pago
+                    ? formatFirebaseTimestamp(socio.fecha_caducidad_pago).split(',')[0]
+                    : 'N/A';
+                detailSocioCaducidad.textContent = caducidad;
+
+                detailSocioFoto.src = socio.url_foto_id || 'https://via.placeholder.com/300x200.png?text=Sin+Foto';
+                detailSocioFoto.alt = `Foto del DNI de ${socio.nombre}`;
+
+                // Generate QR Code
+                qrCodeInstance = new QRCode(qrCodeContainer, {
+                    text: socioId,
+                    width: 128,
+                    height: 128,
+                    colorDark : "#ffffff",
+                    colorLight : "#4A5568", // bg-gray-700
+                    correctLevel : QRCode.CorrectLevel.H
                 });
-                html += '</div>';
-                socioDetailsContent.innerHTML = html;
 
             } catch (error) {
-                console.error("Error al obtener el historial del socio:", error);
-                socioDetailsContent.innerHTML = '<p class="text-center p-8 text-red-500">No se pudo cargar el historial. Inténtalo de nuevo.</p>';
-                showToast("Error al cargar el historial.", true);
+                console.error("Error al mostrar detalles del socio:", error);
+                showToast("Error al cargar los detalles del socio.", true);
+                closeSocioDetailsModal();
             }
         }
 
         function closeSocioDetailsModal() {
             socioDetailsModalOverlay.classList.add('hidden');
-            socioDetailsContent.innerHTML = '<p class="text-center p-8">Cargando historial...</p>'; // Reset content
         }
 
         closeSocioDetailsModalBtn.addEventListener('click', closeSocioDetailsModal);
@@ -558,7 +612,7 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <button data-id="${doc.id}" data-estado="${socio.estado}" class="change-status-btn text-blue-400 hover:underline">Cambiar Estado</button>
-                            <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" class="view-details-btn text-blue-400 hover:underline">Ver Detalles</button>
+                            <button data-id="${doc.id}" class="view-details-btn text-blue-400 hover:underline">Ver Detalles</button>
                         </div>
                     `;
                     sociosList.appendChild(socioCard);
@@ -657,38 +711,81 @@
             }
         });
 
+        // --- Generic Confirmation Modal Logic ---
+        const confirmationModalOverlay = document.getElementById('confirmation-modal-overlay');
+        const confirmationModalMessage = document.getElementById('confirmation-modal-message');
+        const confirmBtn = document.getElementById('confirmation-modal-confirm-btn');
+        const cancelBtn = document.getElementById('confirmation-modal-cancel-btn');
+        let confirmCallback = null;
+
+        function showConfirmationModal(message, onConfirm) {
+            confirmationModalMessage.textContent = message;
+            confirmCallback = onConfirm;
+            confirmationModalOverlay.classList.remove('hidden');
+        }
+
+        function hideConfirmationModal() {
+            confirmationModalOverlay.classList.add('hidden');
+            confirmCallback = null;
+        }
+
+        confirmBtn.addEventListener('click', () => {
+            if (typeof confirmCallback === 'function') {
+                confirmCallback();
+            }
+            hideConfirmationModal();
+        });
+
+        cancelBtn.addEventListener('click', hideConfirmationModal);
+        confirmationModalOverlay.addEventListener('click', (e) => {
+            if (e.target === confirmationModalOverlay) {
+                hideConfirmationModal();
+            }
+        });
+
+
         sociosList.addEventListener('click', async (e) => {
             if (e.target.classList.contains('change-status-btn')) {
                 const socioId = e.target.dataset.id;
-                let currentEstado = e.target.dataset.estado;
-                let newEstado;
-                let fechaCaducidad = null;
+                const currentEstado = e.target.dataset.estado;
 
-                if (currentEstado === 'Gris') {
-                    newEstado = 'Verde';
-                    const futureDate = new Date();
-                    futureDate.setDate(futureDate.getDate() + 365);
-                    fechaCaducidad = futureDate;
-                } else if (currentEstado === 'Verde') {
-                    newEstado = 'Rojo';
-                } else { // Rojo
-                    newEstado = 'Gris';
-                }
+                const confirmationMessage = "¿Seguro que quieres cambiar el estado de este socio?";
 
-                const sociosCollectionRef = getSociosCollectionRef();
-                if (!sociosCollectionRef) return;
+                showConfirmationModal(confirmationMessage, async () => {
+                    let newEstado;
+                    let fechaCaducidad = null;
 
-                const socioRef = doc(sociosCollectionRef, socioId);
-                await updateDoc(socioRef, {
-                    estado: newEstado,
-                    fecha_caducidad_pago: fechaCaducidad
+                    if (currentEstado === 'Gris') {
+                        newEstado = 'Verde';
+                        const futureDate = new Date();
+                        futureDate.setDate(futureDate.getDate() + 365);
+                        fechaCaducidad = futureDate;
+                    } else if (currentEstado === 'Verde') {
+                        newEstado = 'Rojo';
+                    } else { // Rojo
+                        newEstado = 'Gris';
+                    }
+
+                    try {
+                        const sociosCollectionRef = getSociosCollectionRef();
+                        if (!sociosCollectionRef) throw new Error("No se pudo obtener la referencia a la colección de socios.");
+
+                        const socioRef = doc(sociosCollectionRef, socioId);
+                        await updateDoc(socioRef, {
+                            estado: newEstado,
+                            fecha_caducidad_pago: fechaCaducidad
+                        });
+                        showToast("Estado del socio actualizado correctamente.");
+                    } catch (error) {
+                        console.error("Error al cambiar el estado del socio:", error);
+                        showToast("No se pudo actualizar el estado del socio.", true);
+                    }
                 });
             }
 
             if (e.target.classList.contains('view-details-btn')) {
                 const socioId = e.target.dataset.id;
-                const socioNombre = e.target.dataset.nombre;
-                showPartnerDetails(socioId, socioNombre);
+                showPartnerDetails(socioId);
             }
         });
 
@@ -762,12 +859,21 @@
         let currentArticleForStockLoad = null;
 
         function openAddArticuloModal() {
+            // Ensure form is in "add" mode by default
+            formArticulo.reset();
+            formArticulo.removeAttribute('data-editing-id');
+            addArticuloModalOverlay.querySelector('h2').textContent = "Añadir Nuevo Artículo";
+            formArticulo.querySelector('button[type="submit"]').textContent = "Añadir Artículo";
             addArticuloModalOverlay.classList.remove('hidden');
         }
 
         function closeAddArticuloModal() {
             formArticulo.reset();
+            formArticulo.removeAttribute('data-editing-id');
             addArticuloModalOverlay.classList.add('hidden');
+            // Also reset title and button text just in case
+            addArticuloModalOverlay.querySelector('h2').textContent = "Añadir Nuevo Artículo";
+            formArticulo.querySelector('button[type="submit"]').textContent = "Añadir Artículo";
         }
 
         fabAddArticulo.addEventListener('click', openAddArticuloModal);
@@ -778,6 +884,35 @@
                 closeAddArticuloModal();
             }
         });
+
+        async function openEditArticleModal(articleId) {
+            try {
+                const articleRef = doc(db, "articulos", articleId);
+                const articleSnap = await getDoc(articleRef);
+
+                if (!articleSnap.exists()) {
+                    showToast("El artículo que intentas editar ya no existe.", true);
+                    return;
+                }
+                const article = articleSnap.data();
+
+                // Populate form
+                document.getElementById('article-nombre').value = article.nombre;
+                document.getElementById('article-categoria').value = article.categoria;
+                document.getElementById('article-unidad').value = article.unidadMinimaVenta;
+                document.getElementById('article-precio').value = article.precioPorUnidad;
+
+                // Change modal to "edit" state
+                formArticulo.setAttribute('data-editing-id', articleId);
+                addArticuloModalOverlay.querySelector('h2').textContent = "Editar Artículo";
+                formArticulo.querySelector('button[type="submit"]').textContent = "Guardar Cambios";
+
+                addArticuloModalOverlay.classList.remove('hidden');
+            } catch (error) {
+                console.error("Error opening edit article modal:", error);
+                showToast("No se pudo cargar la información del artículo.", true);
+            }
+        }
 
         function openLoadStockModal(articleId, articleName) {
             currentArticleForStockLoad = { id: articleId, nombre: articleName };
@@ -792,10 +927,44 @@
         }
 
         listaArticulosContainer.addEventListener('click', (e) => {
-            if (e.target.classList.contains('load-stock-btn')) {
-                const articleId = e.target.dataset.id;
-                const articleName = e.target.dataset.nombre;
+            const targetButton = e.target.closest('button');
+            if (!targetButton) return;
+
+            if (targetButton.classList.contains('load-stock-btn')) {
+                const articleId = targetButton.dataset.id;
+                const articleName = targetButton.dataset.nombre;
                 openLoadStockModal(articleId, articleName);
+            }
+
+            if (targetButton.classList.contains('edit-article-btn')) {
+                const articleId = targetButton.dataset.id;
+                openEditArticleModal(articleId);
+            }
+
+            if (targetButton.classList.contains('delete-article-btn')) {
+                const articleId = targetButton.dataset.id;
+                const articleName = targetButton.dataset.nombre;
+
+                const message = `¿Estás seguro de que quieres eliminar el artículo "${articleName}"? Esta acción no se puede deshacer.`;
+
+                showConfirmationModal(message, async () => {
+                    try {
+                        // 1. Delete the article document
+                        await deleteDoc(doc(db, "articulos", articleId));
+
+                        // 2. Log the deletion in the history
+                        await addDoc(collection(db, "historial"), {
+                            tipo: "eliminacion",
+                            descripcion: `Artículo "${articleName}" ha sido eliminado.`,
+                            fecha: serverTimestamp()
+                        });
+
+                        showToast(`Artículo "${articleName}" eliminado correctamente.`);
+                    } catch (error) {
+                        console.error("Error al eliminar el artículo:", error);
+                        showToast("No se pudo eliminar el artículo.", true);
+                    }
+                });
             }
         });
 
@@ -822,18 +991,12 @@
             const articleRef = doc(db, "articulos", articleId);
 
             try {
-                // 1. Actualizar stock atómicamente
-                await updateDoc(articleRef, {
-                    stock: increment(cantidad)
-                });
-
-                // 2. Registrar en historial
+                await updateDoc(articleRef, { stock: increment(cantidad) });
                 await addDoc(collection(db, "historial"), {
                     tipo: "recarga",
                     descripcion: `Recarga de ${cantidad} uds. de "${articleName}"`,
                     fecha: serverTimestamp()
                 });
-
                 showToast(`Stock de "${articleName}" actualizado con éxito.`);
                 closeLoadStockModal();
             } catch (error) {
@@ -843,8 +1006,6 @@
         });
 
         function listenToArticles() {
-            // FIX: Se elimina el orden compuesto para no depender de un índice de Firestore.
-            // El orden se aplica ahora en el lado del cliente.
             const q = query(collection(db, "articulos"));
 
             onSnapshot(q, (snapshot) => {
@@ -858,19 +1019,15 @@
                     const article = { id: doc.id, ...doc.data() };
                     const category = article.categoria || 'Sin Categoría';
                     allCategories.add(category);
-                    if (!acc[category]) {
-                        acc[category] = [];
-                    }
+                    if (!acc[category]) acc[category] = [];
                     acc[category].push(article);
                     return acc;
                 }, {});
 
-                // Ordenar artículos dentro de cada categoría por nombre
                 for (const category in articulosPorCategoria) {
                     articulosPorCategoria[category].sort((a, b) => a.nombre.localeCompare(b.nombre));
                 }
 
-                // Actualizar Datalist con categorías ordenadas
                 categoriasDatalist.innerHTML = '';
                 Array.from(allCategories).sort().forEach(cat => {
                     const option = document.createElement('option');
@@ -879,19 +1036,12 @@
                 });
 
                 listaArticulosContainer.innerHTML = '';
-
-                // Obtener y ordenar las claves de categoría para renderizar en orden
                 const sortedCategories = Object.keys(articulosPorCategoria).sort((a, b) => a.localeCompare(b));
 
                 for (const category of sortedCategories) {
                     const categoryContainer = document.createElement('div');
                     categoryContainer.className = 'bg-gray-800 p-4 rounded-lg';
-
-                    const categoryTitle = document.createElement('h2');
-                    categoryTitle.className = 'text-xl font-semibold mb-3 text-blue-400 border-b border-gray-700 pb-2';
-                    categoryTitle.textContent = category;
-                    categoryContainer.appendChild(categoryTitle);
-
+                    categoryContainer.innerHTML = `<h2 class="text-xl font-semibold mb-3 text-blue-400 border-b border-gray-700 pb-2">${category}</h2>`;
                     const itemsContainer = document.createElement('div');
                     itemsContainer.className = 'space-y-2 mt-3';
 
@@ -899,7 +1049,6 @@
                         const articleElement = document.createElement('div');
                         articleElement.className = 'grid grid-cols-1 sm:grid-cols-4 items-center gap-4 p-2 rounded-md hover:bg-gray-700/50';
                         articleElement.dataset.id = article.id;
-
                         const precio = article.precioPorUnidad || 0;
                         const stock = article.stock || 0;
 
@@ -909,15 +1058,14 @@
                                 <p class="text-xs text-gray-400">Categoría: ${article.categoria} | Precio: ${precio.toFixed(2)}€</p>
                             </div>
                             <p>Stock: <span class="font-bold">${stock}</span></p>
-                            <div class="sm:col-span-1 sm:text-right">
-                                <button data-id="${article.id}" data-nombre="${article.nombre}" class="load-stock-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                                    Cargar Stock
-                                </button>
+                            <div class="sm:col-span-1 sm:text-right space-x-2">
+                                <button data-id="${article.id}" class="edit-article-btn bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded-lg text-sm">Editar</button>
+                                <button data-id="${article.id}" data-nombre="${article.nombre}" class="load-stock-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm">Cargar</button>
+                                <button data-id="${article.id}" data-nombre="${article.nombre}" class="delete-article-btn bg-red-700 hover:bg-red-800 text-white font-bold py-1 px-3 rounded-lg text-sm">Eliminar</button>
                             </div>
                         `;
                         itemsContainer.appendChild(articleElement);
                     });
-
                     categoryContainer.appendChild(itemsContainer);
                     listaArticulosContainer.appendChild(categoryContainer);
                 }
@@ -926,7 +1074,6 @@
 
         searchArticulosInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
-            // Se buscan los contenedores de categoría y los items de artículo
             const categoryContainers = listaArticulosContainer.querySelectorAll('.bg-gray-800.p-4.rounded-lg');
             categoryContainers.forEach(container => {
                 const articleItems = container.querySelectorAll('[data-id]');
@@ -940,7 +1087,6 @@
                         item.classList.add('hidden');
                     }
                 });
-                // Si ninguna tarjeta de artículo es visible en una categoría, se oculta el título de la categoría
                 if (categoryHasVisibleItems) {
                     container.classList.remove('hidden');
                 } else {
@@ -951,6 +1097,8 @@
 
         formArticulo.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const editingId = formArticulo.dataset.editingId;
+
             const nombre = document.getElementById('article-nombre').value.trim();
             const categoria = document.getElementById('article-categoria').value.trim();
             const unidadMinimaVenta = Number(document.getElementById('article-unidad').value);
@@ -961,20 +1109,30 @@
                 return;
             }
 
+            const articleData = {
+                nombre,
+                categoria,
+                unidadMinimaVenta,
+                precioPorUnidad,
+            };
+
             try {
-                await addDoc(collection(db, "articulos"), {
-                    nombre,
-                    categoria,
-                    unidadMinimaVenta,
-                    precioPorUnidad,
-                    stock: 0,
-                    createdAt: serverTimestamp()
-                });
-                showToast(`Artículo "${nombre}" añadido con éxito.`);
+                if (editingId) {
+                    const articleRef = doc(db, "articulos", editingId);
+                    await updateDoc(articleRef, articleData);
+                    showToast(`Artículo "${nombre}" actualizado con éxito.`);
+                } else {
+                    await addDoc(collection(db, "articulos"), {
+                        ...articleData,
+                        stock: 0,
+                        createdAt: serverTimestamp()
+                    });
+                    showToast(`Artículo "${nombre}" añadido con éxito.`);
+                }
                 closeAddArticuloModal();
             } catch (error) {
-                console.error("Error adding article: ", error);
-                showToast("Hubo un error al añadir el artículo.", true);
+                console.error("Error saving article: ", error);
+                showToast("Hubo un error al guardar el artículo.", true);
             }
         });
 
