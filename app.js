@@ -106,8 +106,9 @@ const showToast = (message, isError = false) => {
 // ------------------------------------------------------------------
 auth.onAuthStateChanged(user => {
     if (user) {
+        console.log("User is logged in, updating view...");
         // Usuario logueado
-        loginView.classList.remove('active');
+        loginView.style.display = 'none'; // Hide login view directly
         mainContent.classList.remove('hidden');
         showView('main-menu-view');
     } else {
