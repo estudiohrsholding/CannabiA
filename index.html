@@ -470,15 +470,11 @@
         }
 
         // Inicializa Firebase
-        const { initializeApp } = firebase;
-        const { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged, signInWithEmailAndPassword, signOut } = firebase.auth;
-        const { getFirestore, collection, query, orderBy, onSnapshot, where, getDocs } = firebase.firestore;
-        const { getStorage } = firebase.storage;
+        firebase.initializeApp(firebaseConfig);
         
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
         
         let currentUser = null;
 
@@ -527,9 +523,9 @@
         if(backToMenuBtn) backToMenuBtn.addEventListener('click', () => showView('main-menu-view'));
 
         // --- LÓGICA DE AUTENTICACIÓN ---
-        setPersistence(auth, browserLocalPersistence);
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-        onAuthStateChanged(auth, user => {
+        auth.onAuthStateChanged(user => {
             if(loadingView) loadingView.classList.add('hidden');
             if (user) {
                 currentUser = user;
@@ -550,19 +546,19 @@
         
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
             const loginError = document.getElementById('login-error');
             if(loginError) loginError.textContent = '';
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                await auth.signInWithEmailAndPassword(email, password);
             } catch (error) {
                 if(loginError) loginError.textContent = 'Credenciales incorrectas.';
                 console.error("Login Error:", error);
             }
         });
 
-        if(logoutButton) logoutButton.addEventListener('click', () => signOut(auth));
+        if(logoutButton) logoutButton.addEventListener('click', () => auth.signOut());
         
         // --- MÓDULO DE SOCIOS ---
         const sociosList = document.getElementById('socios-list');
@@ -582,9 +578,9 @@
             socioDetailsContent.innerHTML = '<p class="text-center p-8">Cargando historial...</p>';
 
             try {
-                const dispensasRef = collection(db, "dispensas");
-                const q = query(dispensasRef, where("idSocio", "==", socioId), orderBy("fecha", "desc"));
-                const querySnapshot = await getDocs(q);
+                const dispensasRef = db.collection("dispensas");
+                const q = dispensasRef.where("idSocio", "==", socioId).orderBy("fecha", "desc");
+                const querySnapshot = await q.get();
 
                 if (querySnapshot.empty) {
                     socioDetailsContent.innerHTML = '<p class="text-center p-8 text-gray-400">Este socio no tiene dispensas registradas.</p>';
@@ -638,7 +634,7 @@
                 console.error("User not logged in or appId not configured");
                 return null;
             }
-            return collection(db, `artifacts/${firebaseConfig.appId}/users/${currentUser.uid}/socios`);
+            return db.collection(`artifacts/${firebaseConfig.appId}/users/${currentUser.uid}/socios`);
         }
 
         function optimizeImage(file, maxSize = 1024, quality = 0.7) {
@@ -683,8 +679,8 @@
             const sociosCollectionRef = getSociosCollectionRef();
             if (!sociosCollectionRef) return;
 
-            const q = query(sociosCollectionRef, orderBy("apellido", "asc"));
-            onSnapshot(q, (snapshot) => {
+            const q = sociosCollectionRef.orderBy("apellido", "asc");
+            q.onSnapshot((snapshot) => {
                 sociosList.innerHTML = '';
                 if (snapshot.empty) {
                     sociosList.innerHTML = '<tr><td colspan="4" class="py-4 px-6 text-center text-gray-500">No hay socios registrados.</td></tr>';
