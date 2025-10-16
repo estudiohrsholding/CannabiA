@@ -102,7 +102,40 @@
                 </button>
             </section>
             
-            <section id="articles-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Gestión de Artículos</h2><p class="text-gray-400">Próximamente...</p></section>
+            <section id="articles-view" class="view hidden space-y-8">
+                <div>
+                    <h2 class="text-2xl font-bold mb-4">Añadir Nuevo Artículo</h2>
+                    <form id="add-article-form" class="bg-gray-800 p-6 rounded-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="article-nombre" class="block mb-2 text-sm font-medium text-gray-300">Nombre del Artículo</label>
+                                <input type="text" id="article-nombre" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                            </div>
+                            <div>
+                                <label for="article-categoria" class="block mb-2 text-sm font-medium text-gray-300">Categoría</label>
+                                <input type="text" id="article-categoria" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                            </div>
+                            <div>
+                                <label for="article-unidad" class="block mb-2 text-sm font-medium text-gray-300">Unidad Mínima de Venta</label>
+                                <input type="number" id="article-unidad" min="1" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                            </div>
+                            <div>
+                                <label for="article-precio" class="block mb-2 text-sm font-medium text-gray-300">Precio por Unidad (€)</label>
+                                <input type="number" id="article-precio" min="0.01" step="0.01" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-right">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Artículo</button>
+                        </div>
+                    </form>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold mb-4">Inventario</h2>
+                    <div id="articles-list" class="space-y-6">
+                        <!-- Los artículos se renderizarán aquí -->
+                    </div>
+                </div>
+            </section>
             <section id="tpv-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Terminal Punto de Venta (TPV)</h2><p class="text-gray-400">Próximamente...</p></section>
             <section id="stats-view" class="view hidden"><h2 class="text-2xl font-bold mb-4">Estadísticas</h2><p class="text-gray-400">Próximamente...</p></section>
             
@@ -145,7 +178,7 @@
         // Importa las funciones que necesitas de los SDKs de Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
 
         // ==========================================================================================
@@ -230,6 +263,7 @@
                 showView('main-menu-view');
                 listenToSocios();
                 listenToLogs();
+                listenToArticles();
             } else {
                 currentUser = null;
                 appContainer.classList.add('hidden');
@@ -445,6 +479,127 @@
             addSocioForm.reset();
             addSocioModal.classList.add('hidden');
         });
+
+        // --- MÓDULO DE ARTÍCULOS (STOCK) ---
+        const addArticleForm = document.getElementById('add-article-form');
+        const articlesList = document.getElementById('articles-list');
+
+        function listenToArticles() {
+            const q = query(collection(db, "articulos"), orderBy("categoria"), orderBy("nombre"));
+
+            onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    articlesList.innerHTML = '<p class="text-gray-500 text-center">No hay artículos en el inventario.</p>';
+                    return;
+                }
+
+                const articlesByCat = snapshot.docs.reduce((acc, doc) => {
+                    const article = { id: doc.id, ...doc.data() };
+                    const category = article.categoria || 'Sin Categoría';
+                    if (!acc[category]) {
+                        acc[category] = [];
+                    }
+                    acc[category].push(article);
+                    return acc;
+                }, {});
+
+                articlesList.innerHTML = '';
+
+                for (const category in articlesByCat) {
+                    const categoryContainer = document.createElement('div');
+                    categoryContainer.className = 'bg-gray-800 p-4 rounded-lg';
+
+                    const categoryTitle = document.createElement('h3');
+                    categoryTitle.className = 'text-xl font-semibold mb-3 text-blue-400 border-b border-gray-700 pb-2';
+                    categoryTitle.textContent = category;
+                    categoryContainer.appendChild(categoryTitle);
+
+                    const itemsContainer = document.createElement('div');
+                    itemsContainer.className = 'space-y-2 mt-3';
+
+                    articlesByCat[category].forEach(article => {
+                        const articleElement = document.createElement('div');
+                        articleElement.className = 'grid grid-cols-1 sm:grid-cols-4 items-center gap-4 p-2 rounded-md hover:bg-gray-700/50';
+
+                        const precio = article.precioPorUnidad || 0;
+                        const unidad = article.unidadMinimaVenta || 1;
+
+                        articleElement.innerHTML = `
+                            <div class="sm:col-span-2">
+                                <p class="font-medium">${article.nombre}</p>
+                                <p class="text-xs text-gray-400">${precio.toFixed(2)}€ / ${unidad} ud.</p>
+                            </div>
+                            <p>Stock: <span class="font-bold">${article.stock}</span></p>
+                            <div class="flex items-center gap-2">
+                                <input type="number" min="1" placeholder="Cant." class="stock-input bg-gray-600 border border-gray-500 text-white sm:text-sm rounded-lg w-20 p-1.5" data-id="${article.id}">
+                                <button class="load-stock-btn bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded-lg" data-id="${article.id}" data-name="${article.nombre}">Cargar</button>
+                            </div>
+                        `;
+                        itemsContainer.appendChild(articleElement);
+                    });
+
+                    categoryContainer.appendChild(itemsContainer);
+                    articlesList.appendChild(categoryContainer);
+                }
+            });
+        }
+
+        addArticleForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('article-nombre').value.trim();
+            const categoria = document.getElementById('article-categoria').value.trim();
+            const unidadMinimaVenta = Number(document.getElementById('article-unidad').value);
+            const precioPorUnidad = Number(document.getElementById('article-precio').value);
+
+            if (!nombre || !categoria || !unidadMinimaVenta || !precioPorUnidad) {
+                alert("Por favor, completa todos los campos.");
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "articulos"), {
+                    nombre,
+                    categoria,
+                    unidadMinimaVenta,
+                    precioPorUnidad,
+                    stock: 0,
+                    createdAt: serverTimestamp()
+                });
+                await logAction(`Añadió el artículo: ${nombre}`);
+                addArticleForm.reset();
+            } catch (error) {
+                console.error("Error adding article: ", error);
+                alert("Hubo un error al añadir el artículo.");
+            }
+        });
+
+        articlesList.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('load-stock-btn')) {
+                const articleId = e.target.dataset.id;
+                const articleName = e.target.dataset.name;
+                const input = articlesList.querySelector(`.stock-input[data-id="${articleId}"]`);
+                const quantity = Number(input.value);
+
+                if (!input || !quantity || quantity <= 0) {
+                    alert("Por favor, introduce una cantidad válida.");
+                    return;
+                }
+
+                const articleRef = doc(db, "articulos", articleId);
+
+                try {
+                    await updateDoc(articleRef, {
+                        stock: increment(quantity)
+                    });
+                    await logAction(`Cargó ${quantity} uds. de ${articleName} (stock)`);
+                    input.value = '';
+                } catch (error) {
+                    console.error("Error updating stock: ", error);
+                    alert("Error al actualizar el stock.");
+                }
+            }
+        });
+
 
         // --- MÓDULO DE HISTORIAL (LOGS) ---
         const logsList = document.getElementById('logs-list');
