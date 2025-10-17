@@ -1,5 +1,5 @@
 // Importa las funciones que necesitas de los SDKs de Firebase
-        import firebaseConfig from '../firebase-config.js';
+        import { firebaseConfig } from '../firebase-config.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment, runTransaction, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
