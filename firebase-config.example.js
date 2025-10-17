@@ -1,9 +1,18 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyCCIRk9Vip1J5Zc8xAeObsU6poc-J8lcj0",
-  authDomain: "cannabia-9dfe3.firebaseapp.com",
-  projectId: "cannabia-9dfe3",
-  storageBucket: "cannabia-9dfe3.firebasestorage.app",
-  messagingSenderId: "605207982385",
-  appId: "1:605207982385:web:58254637495b2b6d2bc010",
-  measurementId: "G-6M1WRYG1PS"
+// Este es un archivo de plantilla. NO contiene claves de API reales.
+// Su propósito es mostrar la estructura requerida para el archivo `firebase-config.js`.
+//
+// Para configurar el proyecto localmente:
+// 1. Copia este archivo.
+// 2. Renombra la copia a `firebase-config.js`.
+// 3. Rellena los valores de abajo con tus credenciales reales de Firebase.
+// 4. Asegúrate de que `firebase-config.js` esté incluido en tu archivo .gitignore.
+
+export const firebaseConfig = {
+  apiKey: "TU_API_KEY_AQUI",
+  authDomain: "TU_AUTH_DOMAIN_AQUI.firebaseapp.com",
+  projectId: "TU_PROJECT_ID_AQUI",
+  storageBucket: "TU_STORAGE_BUCKET_AQUI.appspot.com",
+  messagingSenderId: "TU_MESSAGING_SENDER_ID_AQUI",
+  appId: "TU_APP_ID_AQUI",
+  measurementId: "TU_MEASUREMENT_ID_AQUI"
 };
