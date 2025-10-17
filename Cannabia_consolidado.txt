@@ -1,0 +1,2485 @@
+
+==================================================
+RUTA DEL ARCHIVO: firebase-config.example.js
+==================================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCCIRk9Vip1J5Zc8xAeObsU6poc-J8lcj0",
+  authDomain: "cannabia-9dfe3.firebaseapp.com",
+  projectId: "cannabia-9dfe3",
+  storageBucket: "cannabia-9dfe3.firebasestorage.app",
+  messagingSenderId: "605207982385",
+  appId: "1:605207982385:web:58254637495b2b6d2bc010",
+  measurementId: "G-6M1WRYG1PS"
+};
+
+
+==================================================
+RUTA DEL ARCHIVO: index.html
+==================================================
+
+<!DOCTYPE html>
+<html lang="es" class="bg-gray-900 text-white">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor del Club v2</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="src/style.css">
+    <!-- Chart.js via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-center bg-gray-900 p-4">
+
+    <div id="loading-view" class="flex items-center justify-center h-screen">
+        <p class="text-xl">Cargando aplicación...</p>
+    </div>
+
+    <div id="login-view" class="hidden w-full max-w-sm mx-auto mt-20">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
+            <h2 class="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="login-email" class="block mb-2 text-sm font-medium text-gray-300">Email</label>
+                    <input type="email" id="login-email" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                </div>
+                <div class="mb-6">
+                    <label for="login-password" class="block mb-2 text-sm font-medium text-gray-300">Contraseña</label>
+                    <input type="password" id="login-password" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Entrar</button>
+                <p id="login-error" class="text-red-500 text-center mt-4"></p>
+            </form>
+        </div>
+    </div>
+    <div id="load-stock-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+        <div id="load-stock-modal-content" class="relative bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md z-50">
+            <h2 id="load-stock-modal-title" class="text-2xl font-bold mb-4">Cargando stock para: </h2>
+            <form id="load-stock-form">
+                <div class="mb-4">
+                    <label for="stock-cantidad-input" class="block mb-2 text-sm font-medium text-gray-300">Cantidad a Cargar</label>
+                    <input type="number" id="stock-cantidad-input" min="1" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" id="cancel-load-stock" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" id="confirm-load-stock-btn" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-lg">Confirmar Carga</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-container" class="w-full max-w-7xl mx-auto">
+        <div id="view-id-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+            <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+                <h2 class="text-2xl font-bold mb-4">Foto del ID</h2>
+                <img id="id-photo-container" src="" alt="Foto del ID" class="rounded-lg max-h-96 mx-auto"/>
+                <div class="flex justify-end mt-4">
+                    <button type="button" id="close-view-id-modal" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded">Cerrar</button>
+                </div>
+            </div>
+        </div>
+        <header class="flex justify-between items-center mb-6">
+            <h1 id="view-title" class="text-3xl font-bold">Menú Principal</h1>
+            <div>
+                <button id="back-to-menu" class="hidden bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg mr-4">← Volver</button>
+                <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <main>
+            <section id="main-menu-view" class="view">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 text-center">
+                <div data-view="socios" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <h2 class="text-xl font-semibold">Socios</h2>
+                    </div>
+                    <div data-view="articulos-section" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                        <h2 class="text-xl font-semibold">Artículos</h2>
+                    </div>
+                    <div data-view="tpv-section" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                        <h2 class="text-xl font-semibold">TPV</h2>
+                    </div>
+                    <div data-view="stats-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        <h2 class="text-xl font-semibold">Estadísticas</h2>
+                    </div>
+                    <div data-view="historial-section" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <h2 class="text-xl font-semibold">Historial</h2>
+                    </div>
+                </div>
+            </section>
+
+            <section id="socios" class="view hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">Socios</h2>
+                    <button id="show-add-socio-modal" class="bg-blue-600 text-white hover:bg-blue-700 py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        Añadir Socio
+                    </button>
+                </div>
+                <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
+                    <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
+                            <tr>
+                                <th scope="col" class="py-3 px-6">Nombre</th>
+                                <th scope="col" class="py-3 px-6">Apellido</th>
+                                <th scope="col" class="py-3 px-6">Estado</th>
+                                <th scope="col" class="py-3 px-6">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="socios-list">
+                            <!-- Los socios se renderizarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <section id="articulos-section" class="view hidden space-y-8">
+                <div>
+                    <h2 class="text-2xl font-bold mb-4">Añadir Nuevo Artículo</h2>
+                    <form id="form-articulo" class="bg-gray-800 p-6 rounded-lg">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="article-nombre" class="block mb-2 text-sm font-medium text-gray-300">Nombre</label>
+                                <input type="text" id="article-nombre" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                            </div>
+                            <div>
+                                <label for="article-categoria" class="block mb-2 text-sm font-medium text-gray-300">Categoría</label>
+                                <input list="categorias-datalist" type="text" id="article-categoria" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                                <datalist id="categorias-datalist"></datalist>
+                            </div>
+                            <div>
+                                <label for="article-unidad" class="block mb-2 text-sm font-medium text-gray-300">Unidad Mínima de Dispensa</label>
+                                <input type="number" id="article-unidad" min="1" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                            </div>
+                            <div>
+                                <label for="article-precio" class="block mb-2 text-sm font-medium text-gray-300">Precio por Unidad (€)</label>
+                                <input type="number" id="article-precio" min="0" step="0.01" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                            </div>
+                        </div>
+                        <div class="mt-6 text-right">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Artículo</button>
+                        </div>
+                    </form>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold mb-4">Inventario</h2>
+                    <div id="lista-articulos-container" class="space-y-6">
+                        <!-- Los artículos se renderizarán aquí -->
+                    </div>
+                </div>
+            </section>
+            <section id="tpv-section" class="view hidden">
+                <div class="bg-gray-800 p-6 rounded-lg text-gray-100">
+                    <h2 class="text-2xl font-bold mb-6">Punto de Dispensa</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Columna de Selección -->
+                        <div class="space-y-4">
+                            <div>
+                                <label for="tpv-socio-select" class="block mb-2 text-sm font-medium">Seleccionar Socio</label>
+                                <select id="tpv-socio-select" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                    <option disabled selected>Seleccione un socio...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="tpv-articulo-select" class="block mb-2 text-sm font-medium">Seleccionar Artículo</label>
+                                <select id="tpv-articulo-select" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                                    <option disabled selected>Seleccione un artículo...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="tpv-cantidad" class="block mb-2 text-sm font-medium">Cantidad</label>
+                                <input type="number" id="tpv-cantidad" min="1" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                            </div>
+                        </div>
+
+                        <!-- Columna de Resumen y Dispensa -->
+                        <div class="space-y-6 flex flex-col justify-between">
+                            <div id="tpv-resumen-pedido" class="bg-gray-700 p-4 mt-6 rounded-md">
+                                <h3 class="text-lg font-bold mb-4 border-b border-gray-600 pb-2">Resumen de Dispensa</h3>
+                                <div class="space-y-3">
+                                    <p>Socio: <span id="resumen-socio" class="font-semibold">--</span></p>
+                                    <p>Artículo: <span id="resumen-articulo" class="font-semibold">--</span></p>
+                                    <p>Cantidad: <span id="resumen-cantidad" class="font-semibold">--</span></p>
+                                    <div class="border-t border-gray-600 pt-3 mt-3">
+                                        <p class="flex justify-between items-center text-xl">
+                                            <span>Aporte por Dispensa:</span>
+                                            <strong id="resumen-total" class="text-2xl text-green-400">0.00 €</strong>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="realizar-dispensa-btn" disabled class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-xl shadow-lg disabled:bg-gray-500 disabled:cursor-not-allowed">
+                                REALIZAR DISPENSA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section id="stats-view" class="view hidden">
+                <h2 class="text-2xl font-bold mb-4">Estadísticas de Dispensas (Últimos 7 días)</h2>
+                <div class="bg-gray-800 p-6 rounded-lg">
+                    <canvas id="grafico-ventas-semanal"></canvas>
+                </div>
+            </section>
+            
+            <section id="historial-section" class="view hidden">
+                 <h2 class="text-2xl font-bold mb-4">Historial de Operaciones</h2>
+                 <div id="historial-container" class="space-y-4">
+                     <!-- El historial de eventos se renderizará aquí -->
+                 </div>
+            </section>
+        </main>
+    </div>
+    
+    <div id="toast-container" class="fixed top-5 right-5 z-50"></div>
+    <div id="add-socio-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+        <div id="add-socio-modal-content" class="relative bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md z-50">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Añadir Socio</h2>
+                <button id="close-add-socio-modal" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="add-socio-form" novalidate>
+                <div id="form-error" class="hidden text-red-400 text-sm mb-4 p-3 bg-red-900/50 rounded-lg"></div>
+                <div class="mb-4">
+                    <label for="socio-nombre" class="block mb-2 text-sm font-medium text-gray-300">Nombre</label>
+                    <input type="text" id="socio-nombre" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    <div id="error-nombre" class="text-red-400 text-sm mt-1"></div>
+                </div>
+                <div class="mb-4">
+                    <label for="socio-apellido" class="block mb-2 text-sm font-medium text-gray-300">Apellido</label>
+                    <input type="text" id="socio-apellido" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    <div id="error-apellido" class="text-red-400 text-sm mt-1"></div>
+                </div>
+                <div class="mb-4">
+                    <label for="socio-id-photo" class="block mb-2 text-sm font-medium text-gray-300">Foto del ID</label>
+                    <input type="file" id="socio-id-photo" accept="image/*" class="w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                    <div id="error-foto" class="text-red-400 text-sm mt-1"></div>
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" id="cancel-add-socio" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="submit" id="submit-socio-btn" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-lg flex items-center">
+                        <span class="btn-text">Guardar</span>
+                        <svg class="spinner hidden w-5 h-5 ml-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de Detalles del Socio -->
+    <div id="socio-details-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-2xl z-50 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
+                <h2 id="socio-details-modal-title" class="text-2xl font-bold">Detalles del Socio</h2>
+                <button id="close-socio-details-modal" class="text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="socio-details-content" class="overflow-y-auto">
+                <!-- El contenido se cargará aquí dinámicamente -->
+                <p class="text-center p-8">Cargando historial...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>
+
+==================================================
+RUTA DEL ARCHIVO: README.md
+==================================================
+
+# Cannabia
+
+
+==================================================
+RUTA DEL ARCHIVO: .nojekyll
+==================================================
+
+
+
+==================================================
+RUTA DEL ARCHIVO: .gitignore
+==================================================
+
+node_modules/
+firebase-config.js
+
+==================================================
+RUTA DEL ARCHIVO: package-lock.json
+==================================================
+
+{
+  "name": "app",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "dependencies": {
+        "firebase": "^12.4.0"
+      }
+    },
+    "node_modules/@firebase/ai": {
+      "version": "2.4.0",
+      "resolved": "https://registry.npmjs.org/@firebase/ai/-/ai-2.4.0.tgz",
+      "integrity": "sha512-YilG6AJ/nYpCKtxZyvEzBRAQv5bU+2tBOKX4Ps0rNNSdxN39aT37kGhjATbk1kq1z5Lq7mkWglw/ajAF3lOWUg==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/app-check-interop-types": "0.3.3",
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x",
+        "@firebase/app-types": "0.x"
+      }
+    },
+    "node_modules/@firebase/analytics": {
+      "version": "0.10.19",
+      "resolved": "https://registry.npmjs.org/@firebase/analytics/-/analytics-0.10.19.tgz",
+      "integrity": "sha512-3wU676fh60gaiVYQEEXsbGS4HbF2XsiBphyvvqDbtC1U4/dO4coshbYktcCHq+HFaGIK07iHOh4pME0hEq1fcg==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/installations": "0.6.19",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x"
+      }
+    },
+    "node_modules/@firebase/analytics-compat": {
+      "version": "0.2.25",
+      "resolved": "https://registry.npmjs.org/@firebase/analytics-compat/-/analytics-compat-0.2.25.tgz",
+      "integrity": "sha512-fdzoaG0BEKbqksRDhmf4JoyZf16Wosrl0Y7tbZtJyVDOOwziE0vrFjmZuTdviL0yhak+Nco6rMsUUbkbD+qb6Q==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/analytics": "0.10.19",
+        "@firebase/analytics-types": "0.8.3",
+        "@firebase/component": "0.7.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "peerDependencies": {
+        "@firebase/app-compat": "0.x"
+      }
+    },
+    "node_modules/@firebase/analytics-types": {
+      "version": "0.8.3",
+      "resolved": "https://registry.npmjs.org/@firebase/analytics-types/-/analytics-types-0.8.3.tgz",
+      "integrity": "sha512-VrIp/d8iq2g501qO46uGz3hjbDb8xzYMrbu8Tp0ovzIzrvJZ2fvmj649gTjge/b7cCCcjT0H37g1gVtlNhnkbg==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/@firebase/app": {
+      "version": "0.14.4",
+      "resolved": "https://registry.npmjs.org/@firebase/app/-/app-0.14.4.tgz",
+      "integrity": "sha512-pUxEGmR+uu21OG/icAovjlu1fcYJzyVhhT0rsCrn+zi+nHtrS43Bp9KPn9KGa4NMspCUE++nkyiqziuIvJdwzw==",
+      "license": "Apache-2.0",
+      "peer": true,
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "idb": "7.1.1",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "node_modules/@firebase/app-check": {
+      "version": "0.11.0",
+      "resolved": "https://registry.npmjs.org/@firebase/app-check/-/app-check-0.11.0.tgz",
+      "integrity": "sha512-XAvALQayUMBJo58U/rxW02IhsesaxxfWVmVkauZvGEz3vOAjMEQnzFlyblqkc2iAaO82uJ2ZVyZv9XzPfxjJ6w==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x"
+      }
+    },
+    "node_modules/@firebase/app-check-compat": {
+      "version": "0.4.0",
+      "resolved": "https://registry.npmjs.org/@firebase/app-check-compat/-/app-check-compat-0.4.0.tgz",
+      "integrity": "sha512-UfK2Q8RJNjYM/8MFORltZRG9lJj11k0nW84rrffiKvcJxLf1jf6IEjCIkCamykHE73C6BwqhVfhIBs69GXQV0g==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/app-check": "0.11.0",
+        "@firebase/app-check-types": "0.5.3",
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app-compat": "0.x"
+      }
+    },
+    "node_modules/@firebase/app-check-interop-types": {
+      "version": "0.3.3",
+      "resolved": "https://registry.npmjs.org/@firebase/app-check-interop-types/-/app-check-interop-types-0.3.3.tgz",
+      "integrity": "sha512-gAlxfPLT2j8bTI/qfe3ahl2I2YcBQ8cFIBdhAQA4I2f3TndcO+22YizyGYuttLHPQEpWkhmpFW60VCFEPg4g5A==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/@firebase/app-check-types": {
+      "version": "0.5.3",
+      "resolved": "https://registry.npmjs.org/@firebase/app-check-types/-/app-check-types-0.5.3.tgz",
+      "integrity": "sha512-hyl5rKSj0QmwPdsAxrI5x1otDlByQ7bvNvVt8G/XPO2CSwE++rmSVf3VEhaeOR4J8ZFaF0Z0NDSmLejPweZ3ng==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/@firebase/app-compat": {
+      "version": "0.5.4",
+      "resolved": "https://registry.npmjs.org/@firebase/app-compat/-/app-compat-0.5.4.tgz",
+      "integrity": "sha512-T7ifGmb+awJEcp542Ek4HtNfBxcBrnuk1ggUdqyFEdsXHdq7+wVlhvE6YukTL7NS8hIkEfL7TMAPx/uCNqt30g==",
+      "license": "Apache-2.0",
+      "peer": true,
+      "dependencies": {
+        "@firebase/app": "0.14.4",
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "node_modules/@firebase/app-types": {
+      "version": "0.9.3",
+      "resolved": "https://registry.npmjs.org/@firebase/app-types/-/app-types-0.9.3.tgz",
+      "integrity": "sha512-kRVpIl4vVGJ4baogMDINbyrIOtOxqhkZQg4jTq3l8Lw6WSk0xfpEYzezFu+Kl4ve4fbPl79dvwRtaFqAC/ucCw==",
+      "license": "Apache-2.0",
+      "peer": true
+    },
+    "node_modules/@firebase/auth": {
+      "version": "1.11.0",
+      "resolved": "https://registry.npmjs.org/@firebase/auth/-/auth-1.11.0.tgz",
+      "integrity": "sha512-5j7+ua93X+IRcJ1oMDTClTo85l7Xe40WSkoJ+shzPrX7OISlVWLdE1mKC57PSD+/LfAbdhJmvKixINBw2ESK6w==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x",
+        "@react-native-async-storage/async-storage": "^1.18.1"
+      },
+      "peerDependenciesMeta": {
+        "@react-native-async-storage/async-storage": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@firebase/auth-compat": {
+      "version": "0.6.0",
+      "resolved": "https://registry.npmjs.org/@firebase/auth-compat/-/auth-compat-0.6.0.tgz",
+      "integrity": "sha512-J0lGSxXlG/lYVi45wbpPhcWiWUMXevY4fvLZsN1GHh+po7TZVng+figdHBVhFheaiipU8HZyc7ljw1jNojM2nw==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/auth": "1.11.0",
+        "@firebase/auth-types": "0.13.0",
+        "@firebase/component": "0.7.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app-compat": "0.x"
+      }
+    },
+    "node_modules/@firebase/auth-interop-types": {
+      "version": "0.2.4",
+      "resolved": "https://registry.npmjs.org/@firebase/auth-interop-types/-/auth-interop-types-0.2.4.tgz",
+      "integrity": "sha512-JPgcXKCuO+CWqGDnigBtvo09HeBs5u/Ktc2GaFj2m01hLarbxthLNm7Fk8iOP1aqAtXV+fnnGj7U28xmk7IwVA==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/@firebase/auth-types": {
+      "version": "0.13.0",
+      "resolved": "https://registry.npmjs.org/@firebase/auth-types/-/auth-types-0.13.0.tgz",
+      "integrity": "sha512-S/PuIjni0AQRLF+l9ck0YpsMOdE8GO2KU6ubmBB7P+7TJUCQDa3R1dlgYm9UzGbbePMZsp0xzB93f2b/CgxMOg==",
+      "license": "Apache-2.0",
+      "peerDependencies": {
+        "@firebase/app-types": "0.x",
+        "@firebase/util": "1.x"
+      }
+    },
+    "node_modules/@firebase/component": {
+      "version": "0.7.0",
+      "resolved": "https://registry.npmjs.org/@firebase/component/-/component-0.7.0.tgz",
+      "integrity": "sha512-wR9En2A+WESUHexjmRHkqtaVH94WLNKt6rmeqZhSLBybg4Wyf0Umk04SZsS6sBq4102ZsDBFwoqMqJYj2IoDSg==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "node_modules/@firebase/data-connect": {
+      "version": "0.3.11",
+      "resolved": "https://registry.npmjs.org/@firebase/data-connect/-/data-connect-0.3.11.tgz",
+      "integrity": "sha512-G258eLzAD6im9Bsw+Qm1Z+P4x0PGNQ45yeUuuqe5M9B1rn0RJvvsQCRHXgE52Z+n9+WX1OJd/crcuunvOGc7Vw==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/auth-interop-types": "0.2.4",
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x"
+      }
+    },
+    "node_modules/@firebase/database": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@firebase/database/-/database-1.1.0.tgz",
+      "integrity": "sha512-gM6MJFae3pTyNLoc9VcJNuaUDej0ctdjn3cVtILo3D5lpp0dmUHHLFN/pUKe7ImyeB1KAvRlEYxvIHNF04Filg==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/app-check-interop-types": "0.3.3",
+        "@firebase/auth-interop-types": "0.2.4",
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "faye-websocket": "0.11.4",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "node_modules/@firebase/database-compat": {
+      "version": "2.1.0",
+      "resolved": "https://registry.npmjs.org/@firebase/database-compat/-/database-compat-2.1.0.tgz",
+      "integrity": "sha512-8nYc43RqxScsePVd1qe1xxvWNf0OBnbwHxmXJ7MHSuuTVYFO3eLyLW3PiCKJ9fHnmIz4p4LbieXwz+qtr9PZDg==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/database": "1.1.0",
+        "@firebase/database-types": "1.0.16",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "node_modules/@firebase/database-types": {
+      "version": "1.0.16",
+      "resolved": "https://registry.npmjs.org/@firebase/database-types/-/database-types-1.0.16.tgz",
+      "integrity": "sha512-xkQLQfU5De7+SPhEGAXFBnDryUWhhlFXelEg2YeZOQMCdoe7dL64DDAd77SQsR+6uoXIZY5MB4y/inCs4GTfcw==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/app-types": "0.9.3",
+        "@firebase/util": "1.13.0"
+      }
+    },
+    "node_modules/@firebase/firestore": {
+      "version": "4.9.2",
+      "resolved": "https://registry.npmjs.org/@firebase/firestore/-/firestore-4.9.2.tgz",
+      "integrity": "sha512-iuA5+nVr/IV/Thm0Luoqf2mERUvK9g791FZpUJV1ZGXO6RL2/i/WFJUj5ZTVXy5pRjpWYO+ZzPcReNrlilmztA==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "@firebase/webchannel-wrapper": "1.0.5",
+        "@grpc/grpc-js": "~1.9.0",
+        "@grpc/proto-loader": "^0.7.8",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x"
+      }
+    },
+    "node_modules/@firebase/firestore-compat": {
+      "version": "0.4.2",
+      "resolved": "https://registry.npmjs.org/@firebase/firestore-compat/-/firestore-compat-0.4.2.tgz",
+      "integrity": "sha512-cy7ov6SpFBx+PHwFdOOjbI7kH00uNKmIFurAn560WiPCZXy9EMnil1SOG7VF4hHZKdenC+AHtL4r3fNpirpm0w==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/firestore": "4.9.2",
+        "@firebase/firestore-types": "3.0.3",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app-compat": "0.x"
+      }
+    },
+    "node_modules/@firebase/firestore-types": {
+      "version": "3.0.3",
+      "resolved": "https://registry.npmjs.org/@firebase/firestore-types/-/firestore-types-3.0.3.tgz",
+      "integrity": "sha512-hD2jGdiWRxB/eZWF89xcK9gF8wvENDJkzpVFb4aGkzfEaKxVRD1kjz1t1Wj8VZEp2LCB53Yx1zD8mrhQu87R6Q==",
+      "license": "Apache-2.0",
+      "peerDependencies": {
+        "@firebase/app-types": "0.x",
+        "@firebase/util": "1.x"
+      }
+    },
+    "node_modules/@firebase/functions": {
+      "version": "0.13.1",
+      "resolved": "https://registry.npmjs.org/@firebase/functions/-/functions-0.13.1.tgz",
+      "integrity": "sha512-sUeWSb0rw5T+6wuV2o9XNmh9yHxjFI9zVGFnjFi+n7drTEWpl7ZTz1nROgGrSu472r+LAaj+2YaSicD4R8wfbw==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/app-check-interop-types": "0.3.3",
+        "@firebase/auth-interop-types": "0.2.4",
+        "@firebase/component": "0.7.0",
+        "@firebase/messaging-interop-types": "0.2.3",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x"
+      }
+    },
+    "node_modules/@firebase/functions-compat": {
+      "version": "0.4.1",
+      "resolved": "https://registry.npmjs.org/@firebase/functions-compat/-/functions-compat-0.4.1.tgz",
+      "integrity": "sha512-AxxUBXKuPrWaVNQ8o1cG1GaCAtXT8a0eaTDfqgS5VsRYLAR0ALcfqDLwo/QyijZj1w8Qf8n3Qrfy/+Im245hOQ==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/functions": "0.13.1",
+        "@firebase/functions-types": "0.6.3",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app-compat": "0.x"
+      }
+    },
+    "node_modules/@firebase/functions-types": {
+      "version": "0.6.3",
+      "resolved": "https://registry.npmjs.org/@firebase/functions-types/-/functions-types-0.6.3.tgz",
+      "integrity": "sha512-EZoDKQLUHFKNx6VLipQwrSMh01A1SaL3Wg6Hpi//x6/fJ6Ee4hrAeswK99I5Ht8roiniKHw4iO0B1Oxj5I4plg==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/@firebase/installations": {
+      "version": "0.6.19",
+      "resolved": "https://registry.npmjs.org/@firebase/installations/-/installations-0.6.19.tgz",
+      "integrity": "sha512-nGDmiwKLI1lerhwfwSHvMR9RZuIH5/8E3kgUWnVRqqL7kGVSktjLTWEMva7oh5yxQ3zXfIlIwJwMcaM5bK5j8Q==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/util": "1.13.0",
+        "idb": "7.1.1",
+        "tslib": "^2.1.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x"
+      }
+    },
+    "node_modules/@firebase/installations-compat": {
+      "version": "0.2.19",
+      "resolved": "https://registry.npmjs.org/@firebase/installations-compat/-/installations-compat-0.2.19.tgz",
+      "integrity": "sha512-khfzIY3EI5LePePo7vT19/VEIH1E3iYsHknI/6ek9T8QCozAZshWT9CjlwOzZrKvTHMeNcbpo/VSOSIWDSjWdQ==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/installations": "0.6.19",
+        "@firebase/installations-types": "0.5.3",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "peerDependencies": {
+        "@firebase/app-compat": "0.x"
+      }
+    },
+    "node_modules/@firebase/installations-types": {
+      "version": "0.5.3",
+      "resolved": "https://registry.npmjs.org/@firebase/installations-types/-/installations-types-0.5.3.tgz",
+      "integrity": "sha512-2FJI7gkLqIE0iYsNQ1P751lO3hER+Umykel+TkLwHj6plzWVxqvfclPUZhcKFVQObqloEBTmpi2Ozn7EkCABAA==",
+      "license": "Apache-2.0",
+      "peerDependencies": {
+        "@firebase/app-types": "0.x"
+      }
+    },
+    "node_modules/@firebase/logger": {
+      "version": "0.5.0",
+      "resolved": "https://registry.npmjs.org/@firebase/logger/-/logger-0.5.0.tgz",
+      "integrity": "sha512-cGskaAvkrnh42b3BA3doDWeBmuHFO/Mx5A83rbRDYakPjO9bJtRL3dX7javzc2Rr/JHZf4HlterTW2lUkfeN4g==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "node_modules/@firebase/messaging": {
+      "version": "0.12.23",
+      "resolved": "https://registry.npmjs.org/@firebase/messaging/-/messaging-0.12.23.tgz",
+      "integrity": "sha512-cfuzv47XxqW4HH/OcR5rM+AlQd1xL/VhuaeW/wzMW1LFrsFcTn0GND/hak1vkQc2th8UisBcrkVcQAnOnKwYxg==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/installations": "0.6.19",
+        "@firebase/messaging-interop-types": "0.2.3",
+        "@firebase/util": "1.13.0",
+        "idb": "7.1.1",
+        "tslib": "^2.1.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x"
+      }
+    },
+    "node_modules/@firebase/messaging-compat": {
+      "version": "0.2.23",
+      "resolved": "https://registry.npmjs.org/@firebase/messaging-compat/-/messaging-compat-0.2.23.tgz",
+      "integrity": "sha512-SN857v/kBUvlQ9X/UjAqBoQ2FEaL1ZozpnmL1ByTe57iXkmnVVFm9KqAsTfmf+OEwWI4kJJe9NObtN/w22lUgg==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/messaging": "0.12.23",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "peerDependencies": {
+        "@firebase/app-compat": "0.x"
+      }
+    },
+    "node_modules/@firebase/messaging-interop-types": {
+      "version": "0.2.3",
+      "resolved": "https://registry.npmjs.org/@firebase/messaging-interop-types/-/messaging-interop-types-0.2.3.tgz",
+      "integrity": "sha512-xfzFaJpzcmtDjycpDeCUj0Ge10ATFi/VHVIvEEjDNc3hodVBQADZ7BWQU7CuFpjSHE+eLuBI13z5F/9xOoGX8Q==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/@firebase/performance": {
+      "version": "0.7.9",
+      "resolved": "https://registry.npmjs.org/@firebase/performance/-/performance-0.7.9.tgz",
+      "integrity": "sha512-UzybENl1EdM2I1sjYm74xGt/0JzRnU/0VmfMAKo2LSpHJzaj77FCLZXmYQ4oOuE+Pxtt8Wy2BVJEENiZkaZAzQ==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/installations": "0.6.19",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0",
+        "web-vitals": "^4.2.4"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x"
+      }
+    },
+    "node_modules/@firebase/performance-compat": {
+      "version": "0.2.22",
+      "resolved": "https://registry.npmjs.org/@firebase/performance-compat/-/performance-compat-0.2.22.tgz",
+      "integrity": "sha512-xLKxaSAl/FVi10wDX/CHIYEUP13jXUjinL+UaNXT9ByIvxII5Ne5150mx6IgM8G6Q3V+sPiw9C8/kygkyHUVxg==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/performance": "0.7.9",
+        "@firebase/performance-types": "0.2.3",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "peerDependencies": {
+        "@firebase/app-compat": "0.x"
+      }
+    },
+    "node_modules/@firebase/performance-types": {
+      "version": "0.2.3",
+      "resolved": "https://registry.npmjs.org/@firebase/performance-types/-/performance-types-0.2.3.tgz",
+      "integrity": "sha512-IgkyTz6QZVPAq8GSkLYJvwSLr3LS9+V6vNPQr0x4YozZJiLF5jYixj0amDtATf1X0EtYHqoPO48a9ija8GocxQ==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/@firebase/remote-config": {
+      "version": "0.7.0",
+      "resolved": "https://registry.npmjs.org/@firebase/remote-config/-/remote-config-0.7.0.tgz",
+      "integrity": "sha512-dX95X6WlW7QlgNd7aaGdjAIZUiQkgWgNS+aKNu4Wv92H1T8Ue/NDUjZHd9xb8fHxLXIHNZeco9/qbZzr500MjQ==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/installations": "0.6.19",
+        "@firebase/logger": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x"
+      }
+    },
+    "node_modules/@firebase/remote-config-compat": {
+      "version": "0.2.20",
+      "resolved": "https://registry.npmjs.org/@firebase/remote-config-compat/-/remote-config-compat-0.2.20.tgz",
+      "integrity": "sha512-P/ULS9vU35EL9maG7xp66uljkZgcPMQOxLj3Zx2F289baTKSInE6+YIkgHEi1TwHoddC/AFePXPpshPlEFkbgg==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/logger": "0.5.0",
+        "@firebase/remote-config": "0.7.0",
+        "@firebase/remote-config-types": "0.5.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "peerDependencies": {
+        "@firebase/app-compat": "0.x"
+      }
+    },
+    "node_modules/@firebase/remote-config-types": {
+      "version": "0.5.0",
+      "resolved": "https://registry.npmjs.org/@firebase/remote-config-types/-/remote-config-types-0.5.0.tgz",
+      "integrity": "sha512-vI3bqLoF14L/GchtgayMiFpZJF+Ao3uR8WCde0XpYNkSokDpAKca2DxvcfeZv7lZUqkUwQPL2wD83d3vQ4vvrg==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/@firebase/storage": {
+      "version": "0.14.0",
+      "resolved": "https://registry.npmjs.org/@firebase/storage/-/storage-0.14.0.tgz",
+      "integrity": "sha512-xWWbb15o6/pWEw8H01UQ1dC5U3rf8QTAzOChYyCpafV6Xki7KVp3Yaw2nSklUwHEziSWE9KoZJS7iYeyqWnYFA==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app": "0.x"
+      }
+    },
+    "node_modules/@firebase/storage-compat": {
+      "version": "0.4.0",
+      "resolved": "https://registry.npmjs.org/@firebase/storage-compat/-/storage-compat-0.4.0.tgz",
+      "integrity": "sha512-vDzhgGczr1OfcOy285YAPur5pWDEvD67w4thyeCUh6Ys0izN9fNYtA1MJERmNBfqjqu0lg0FM5GLbw0Il21M+g==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/component": "0.7.0",
+        "@firebase/storage": "0.14.0",
+        "@firebase/storage-types": "0.8.3",
+        "@firebase/util": "1.13.0",
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "@firebase/app-compat": "0.x"
+      }
+    },
+    "node_modules/@firebase/storage-types": {
+      "version": "0.8.3",
+      "resolved": "https://registry.npmjs.org/@firebase/storage-types/-/storage-types-0.8.3.tgz",
+      "integrity": "sha512-+Muk7g9uwngTpd8xn9OdF/D48uiQ7I1Fae7ULsWPuKoCH3HU7bfFPhxtJYzyhjdniowhuDpQcfPmuNRAqZEfvg==",
+      "license": "Apache-2.0",
+      "peerDependencies": {
+        "@firebase/app-types": "0.x",
+        "@firebase/util": "1.x"
+      }
+    },
+    "node_modules/@firebase/util": {
+      "version": "1.13.0",
+      "resolved": "https://registry.npmjs.org/@firebase/util/-/util-1.13.0.tgz",
+      "integrity": "sha512-0AZUyYUfpMNcztR5l09izHwXkZpghLgCUaAGjtMwXnCg3bj4ml5VgiwqOMOxJ+Nw4qN/zJAaOQBcJ7KGkWStqQ==",
+      "hasInstallScript": true,
+      "license": "Apache-2.0",
+      "peer": true,
+      "dependencies": {
+        "tslib": "^2.1.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      }
+    },
+    "node_modules/@firebase/webchannel-wrapper": {
+      "version": "1.0.5",
+      "resolved": "https://registry.npmjs.org/@firebase/webchannel-wrapper/-/webchannel-wrapper-1.0.5.tgz",
+      "integrity": "sha512-+uGNN7rkfn41HLO0vekTFhTxk61eKa8mTpRGLO0QSqlQdKvIoGAvLp3ppdVIWbTGYJWM6Kp0iN+PjMIOcnVqTw==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/@grpc/grpc-js": {
+      "version": "1.9.15",
+      "resolved": "https://registry.npmjs.org/@grpc/grpc-js/-/grpc-js-1.9.15.tgz",
+      "integrity": "sha512-nqE7Hc0AzI+euzUwDAy0aY5hCp10r734gMGRdU+qOPX0XSceI2ULrcXB5U2xSc5VkWwalCj4M7GzCAygZl2KoQ==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@grpc/proto-loader": "^0.7.8",
+        "@types/node": ">=12.12.47"
+      },
+      "engines": {
+        "node": "^8.13.0 || >=10.10.0"
+      }
+    },
+    "node_modules/@grpc/proto-loader": {
+      "version": "0.7.15",
+      "resolved": "https://registry.npmjs.org/@grpc/proto-loader/-/proto-loader-0.7.15.tgz",
+      "integrity": "sha512-tMXdRCfYVixjuFK+Hk0Q1s38gV9zDiDJfWL3h1rv4Qc39oILCu1TRTDt7+fGUI8K4G1Fj125Hx/ru3azECWTyQ==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "lodash.camelcase": "^4.3.0",
+        "long": "^5.0.0",
+        "protobufjs": "^7.2.5",
+        "yargs": "^17.7.2"
+      },
+      "bin": {
+        "proto-loader-gen-types": "build/bin/proto-loader-gen-types.js"
+      },
+      "engines": {
+        "node": ">=6"
+      }
+    },
+    "node_modules/@protobufjs/aspromise": {
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/@protobufjs/aspromise/-/aspromise-1.1.2.tgz",
+      "integrity": "sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==",
+      "license": "BSD-3-Clause"
+    },
+    "node_modules/@protobufjs/base64": {
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/@protobufjs/base64/-/base64-1.1.2.tgz",
+      "integrity": "sha512-AZkcAA5vnN/v4PDqKyMR5lx7hZttPDgClv83E//FMNhR2TMcLUhfRUBHCmSl0oi9zMgDDqRUJkSxO3wm85+XLg==",
+      "license": "BSD-3-Clause"
+    },
+    "node_modules/@protobufjs/codegen": {
+      "version": "2.0.4",
+      "resolved": "https://registry.npmjs.org/@protobufjs/codegen/-/codegen-2.0.4.tgz",
+      "integrity": "sha512-YyFaikqM5sH0ziFZCN3xDC7zeGaB/d0IUb9CATugHWbd1FRFwWwt4ld4OYMPWu5a3Xe01mGAULCdqhMlPl29Jg==",
+      "license": "BSD-3-Clause"
+    },
+    "node_modules/@protobufjs/eventemitter": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/eventemitter/-/eventemitter-1.1.0.tgz",
+      "integrity": "sha512-j9ednRT81vYJ9OfVuXG6ERSTdEL1xVsNgqpkxMsbIabzSo3goCjDIveeGv5d03om39ML71RdmrGNjG5SReBP/Q==",
+      "license": "BSD-3-Clause"
+    },
+    "node_modules/@protobufjs/fetch": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/fetch/-/fetch-1.1.0.tgz",
+      "integrity": "sha512-lljVXpqXebpsijW71PZaCYeIcE5on1w5DlQy5WH6GLbFryLUrBD4932W/E2BSpfRJWseIL4v/KPgBFxDOIdKpQ==",
+      "license": "BSD-3-Clause",
+      "dependencies": {
+        "@protobufjs/aspromise": "^1.1.1",
+        "@protobufjs/inquire": "^1.1.0"
+      }
+    },
+    "node_modules/@protobufjs/float": {
+      "version": "1.0.2",
+      "resolved": "https://registry.npmjs.org/@protobufjs/float/-/float-1.0.2.tgz",
+      "integrity": "sha512-Ddb+kVXlXst9d+R9PfTIxh1EdNkgoRe5tOX6t01f1lYWOvJnSPDBlG241QLzcyPdoNTsblLUdujGSE4RzrTZGQ==",
+      "license": "BSD-3-Clause"
+    },
+    "node_modules/@protobufjs/inquire": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/inquire/-/inquire-1.1.0.tgz",
+      "integrity": "sha512-kdSefcPdruJiFMVSbn801t4vFK7KB/5gd2fYvrxhuJYg8ILrmn9SKSX2tZdV6V+ksulWqS7aXjBcRXl3wHoD9Q==",
+      "license": "BSD-3-Clause"
+    },
+    "node_modules/@protobufjs/path": {
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/@protobufjs/path/-/path-1.1.2.tgz",
+      "integrity": "sha512-6JOcJ5Tm08dOHAbdR3GrvP+yUUfkjG5ePsHYczMFLq3ZmMkAD98cDgcT2iA1lJ9NVwFd4tH/iSSoe44YWkltEA==",
+      "license": "BSD-3-Clause"
+    },
+    "node_modules/@protobufjs/pool": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/pool/-/pool-1.1.0.tgz",
+      "integrity": "sha512-0kELaGSIDBKvcgS4zkjz1PeddatrjYcmMWOlAuAPwAeccUrPHdUqo/J6LiymHHEiJT5NrF1UVwxY14f+fy4WQw==",
+      "license": "BSD-3-Clause"
+    },
+    "node_modules/@protobufjs/utf8": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@protobufjs/utf8/-/utf8-1.1.0.tgz",
+      "integrity": "sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==",
+      "license": "BSD-3-Clause"
+    },
+    "node_modules/@types/node": {
+      "version": "24.7.2",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-24.7.2.tgz",
+      "integrity": "sha512-/NbVmcGTP+lj5oa4yiYxxeBjRivKQ5Ns1eSZeB99ExsEQ6rX5XYU1Zy/gGxY/ilqtD4Etx9mKyrPxZRetiahhA==",
+      "license": "MIT",
+      "dependencies": {
+        "undici-types": "~7.14.0"
+      }
+    },
+    "node_modules/ansi-regex": {
+      "version": "5.0.1",
+      "resolved": "https://registry.npmjs.org/ansi-regex/-/ansi-regex-5.0.1.tgz",
+      "integrity": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=8"
+      }
+    },
+    "node_modules/ansi-styles": {
+      "version": "4.3.0",
+      "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-4.3.0.tgz",
+      "integrity": "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==",
+      "license": "MIT",
+      "dependencies": {
+        "color-convert": "^2.0.1"
+      },
+      "engines": {
+        "node": ">=8"
+      },
+      "funding": {
+        "url": "https://github.com/chalk/ansi-styles?sponsor=1"
+      }
+    },
+    "node_modules/cliui": {
+      "version": "8.0.1",
+      "resolved": "https://registry.npmjs.org/cliui/-/cliui-8.0.1.tgz",
+      "integrity": "sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==",
+      "license": "ISC",
+      "dependencies": {
+        "string-width": "^4.2.0",
+        "strip-ansi": "^6.0.1",
+        "wrap-ansi": "^7.0.0"
+      },
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/color-convert": {
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/color-convert/-/color-convert-2.0.1.tgz",
+      "integrity": "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==",
+      "license": "MIT",
+      "dependencies": {
+        "color-name": "~1.1.4"
+      },
+      "engines": {
+        "node": ">=7.0.0"
+      }
+    },
+    "node_modules/color-name": {
+      "version": "1.1.4",
+      "resolved": "https://registry.npmjs.org/color-name/-/color-name-1.1.4.tgz",
+      "integrity": "sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==",
+      "license": "MIT"
+    },
+    "node_modules/emoji-regex": {
+      "version": "8.0.0",
+      "resolved": "https://registry.npmjs.org/emoji-regex/-/emoji-regex-8.0.0.tgz",
+      "integrity": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==",
+      "license": "MIT"
+    },
+    "node_modules/escalade": {
+      "version": "3.2.0",
+      "resolved": "https://registry.npmjs.org/escalade/-/escalade-3.2.0.tgz",
+      "integrity": "sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=6"
+      }
+    },
+    "node_modules/faye-websocket": {
+      "version": "0.11.4",
+      "resolved": "https://registry.npmjs.org/faye-websocket/-/faye-websocket-0.11.4.tgz",
+      "integrity": "sha512-CzbClwlXAuiRQAlUyfqPgvPoNKTckTPGfwZV4ZdAhVcP2lh9KUxJg2b5GkE7XbjKQ3YJnQ9z6D9ntLAlB+tP8g==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "websocket-driver": ">=0.5.1"
+      },
+      "engines": {
+        "node": ">=0.8.0"
+      }
+    },
+    "node_modules/firebase": {
+      "version": "12.4.0",
+      "resolved": "https://registry.npmjs.org/firebase/-/firebase-12.4.0.tgz",
+      "integrity": "sha512-/chNgDQ6ppPPGOQO4jctxOa/5JeQxuhaxA7Y90K0I+n/wPfoO8mRveedhVUdo7ExLcWUivnnow/ouSLYSI5Icw==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "@firebase/ai": "2.4.0",
+        "@firebase/analytics": "0.10.19",
+        "@firebase/analytics-compat": "0.2.25",
+        "@firebase/app": "0.14.4",
+        "@firebase/app-check": "0.11.0",
+        "@firebase/app-check-compat": "0.4.0",
+        "@firebase/app-compat": "0.5.4",
+        "@firebase/app-types": "0.9.3",
+        "@firebase/auth": "1.11.0",
+        "@firebase/auth-compat": "0.6.0",
+        "@firebase/data-connect": "0.3.11",
+        "@firebase/database": "1.1.0",
+        "@firebase/database-compat": "2.1.0",
+        "@firebase/firestore": "4.9.2",
+        "@firebase/firestore-compat": "0.4.2",
+        "@firebase/functions": "0.13.1",
+        "@firebase/functions-compat": "0.4.1",
+        "@firebase/installations": "0.6.19",
+        "@firebase/installations-compat": "0.2.19",
+        "@firebase/messaging": "0.12.23",
+        "@firebase/messaging-compat": "0.2.23",
+        "@firebase/performance": "0.7.9",
+        "@firebase/performance-compat": "0.2.22",
+        "@firebase/remote-config": "0.7.0",
+        "@firebase/remote-config-compat": "0.2.20",
+        "@firebase/storage": "0.14.0",
+        "@firebase/storage-compat": "0.4.0",
+        "@firebase/util": "1.13.0"
+      }
+    },
+    "node_modules/get-caller-file": {
+      "version": "2.0.5",
+      "resolved": "https://registry.npmjs.org/get-caller-file/-/get-caller-file-2.0.5.tgz",
+      "integrity": "sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==",
+      "license": "ISC",
+      "engines": {
+        "node": "6.* || 8.* || >= 10.*"
+      }
+    },
+    "node_modules/http-parser-js": {
+      "version": "0.5.10",
+      "resolved": "https://registry.npmjs.org/http-parser-js/-/http-parser-js-0.5.10.tgz",
+      "integrity": "sha512-Pysuw9XpUq5dVc/2SMHpuTY01RFl8fttgcyunjL7eEMhGM3cI4eOmiCycJDVCo/7O7ClfQD3SaI6ftDzqOXYMA==",
+      "license": "MIT"
+    },
+    "node_modules/idb": {
+      "version": "7.1.1",
+      "resolved": "https://registry.npmjs.org/idb/-/idb-7.1.1.tgz",
+      "integrity": "sha512-gchesWBzyvGHRO9W8tzUWFDycow5gwjvFKfyV9FF32Y7F50yZMp7mP+T2mJIWFx49zicqyC4uefHM17o6xKIVQ==",
+      "license": "ISC"
+    },
+    "node_modules/is-fullwidth-code-point": {
+      "version": "3.0.0",
+      "resolved": "https://registry.npmjs.org/is-fullwidth-code-point/-/is-fullwidth-code-point-3.0.0.tgz",
+      "integrity": "sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=8"
+      }
+    },
+    "node_modules/lodash.camelcase": {
+      "version": "4.3.0",
+      "resolved": "https://registry.npmjs.org/lodash.camelcase/-/lodash.camelcase-4.3.0.tgz",
+      "integrity": "sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==",
+      "license": "MIT"
+    },
+    "node_modules/long": {
+      "version": "5.3.2",
+      "resolved": "https://registry.npmjs.org/long/-/long-5.3.2.tgz",
+      "integrity": "sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/protobufjs": {
+      "version": "7.5.4",
+      "resolved": "https://registry.npmjs.org/protobufjs/-/protobufjs-7.5.4.tgz",
+      "integrity": "sha512-CvexbZtbov6jW2eXAvLukXjXUW1TzFaivC46BpWc/3BpcCysb5Vffu+B3XHMm8lVEuy2Mm4XGex8hBSg1yapPg==",
+      "hasInstallScript": true,
+      "license": "BSD-3-Clause",
+      "dependencies": {
+        "@protobufjs/aspromise": "^1.1.2",
+        "@protobufjs/base64": "^1.1.2",
+        "@protobufjs/codegen": "^2.0.4",
+        "@protobufjs/eventemitter": "^1.1.0",
+        "@protobufjs/fetch": "^1.1.0",
+        "@protobufjs/float": "^1.0.2",
+        "@protobufjs/inquire": "^1.1.0",
+        "@protobufjs/path": "^1.1.2",
+        "@protobufjs/pool": "^1.1.0",
+        "@protobufjs/utf8": "^1.1.0",
+        "@types/node": ">=13.7.0",
+        "long": "^5.0.0"
+      },
+      "engines": {
+        "node": ">=12.0.0"
+      }
+    },
+    "node_modules/require-directory": {
+      "version": "2.1.1",
+      "resolved": "https://registry.npmjs.org/require-directory/-/require-directory-2.1.1.tgz",
+      "integrity": "sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=0.10.0"
+      }
+    },
+    "node_modules/safe-buffer": {
+      "version": "5.2.1",
+      "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.2.1.tgz",
+      "integrity": "sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==",
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/feross"
+        },
+        {
+          "type": "patreon",
+          "url": "https://www.patreon.com/feross"
+        },
+        {
+          "type": "consulting",
+          "url": "https://feross.org/support"
+        }
+      ],
+      "license": "MIT"
+    },
+    "node_modules/string-width": {
+      "version": "4.2.3",
+      "resolved": "https://registry.npmjs.org/string-width/-/string-width-4.2.3.tgz",
+      "integrity": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
+      "license": "MIT",
+      "dependencies": {
+        "emoji-regex": "^8.0.0",
+        "is-fullwidth-code-point": "^3.0.0",
+        "strip-ansi": "^6.0.1"
+      },
+      "engines": {
+        "node": ">=8"
+      }
+    },
+    "node_modules/strip-ansi": {
+      "version": "6.0.1",
+      "resolved": "https://registry.npmjs.org/strip-ansi/-/strip-ansi-6.0.1.tgz",
+      "integrity": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
+      "license": "MIT",
+      "dependencies": {
+        "ansi-regex": "^5.0.1"
+      },
+      "engines": {
+        "node": ">=8"
+      }
+    },
+    "node_modules/tslib": {
+      "version": "2.8.1",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
+      "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==",
+      "license": "0BSD"
+    },
+    "node_modules/undici-types": {
+      "version": "7.14.0",
+      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-7.14.0.tgz",
+      "integrity": "sha512-QQiYxHuyZ9gQUIrmPo3IA+hUl4KYk8uSA7cHrcKd/l3p1OTpZcM0Tbp9x7FAtXdAYhlasd60ncPpgu6ihG6TOA==",
+      "license": "MIT"
+    },
+    "node_modules/web-vitals": {
+      "version": "4.2.4",
+      "resolved": "https://registry.npmjs.org/web-vitals/-/web-vitals-4.2.4.tgz",
+      "integrity": "sha512-r4DIlprAGwJ7YM11VZp4R884m0Vmgr6EAKe3P+kO0PPj3Unqyvv59rczf6UiGcb9Z8QxZVcqKNwv/g0WNdWwsw==",
+      "license": "Apache-2.0"
+    },
+    "node_modules/websocket-driver": {
+      "version": "0.7.4",
+      "resolved": "https://registry.npmjs.org/websocket-driver/-/websocket-driver-0.7.4.tgz",
+      "integrity": "sha512-b17KeDIQVjvb0ssuSDF2cYXSg2iztliJ4B9WdsuB6J952qCPKmnVq4DyW5motImXHDC1cBT/1UezrJVsKw5zjg==",
+      "license": "Apache-2.0",
+      "dependencies": {
+        "http-parser-js": ">=0.5.1",
+        "safe-buffer": ">=5.1.0",
+        "websocket-extensions": ">=0.1.1"
+      },
+      "engines": {
+        "node": ">=0.8.0"
+      }
+    },
+    "node_modules/websocket-extensions": {
+      "version": "0.1.4",
+      "resolved": "https://registry.npmjs.org/websocket-extensions/-/websocket-extensions-0.1.4.tgz",
+      "integrity": "sha512-OqedPIGOfsDlo31UNwYbCFMSaO9m9G/0faIHj5/dZFDMFqPTcx6UwqyOy3COEaEOg/9VsGIpdqn62W5KhoKSpg==",
+      "license": "Apache-2.0",
+      "engines": {
+        "node": ">=0.8.0"
+      }
+    },
+    "node_modules/wrap-ansi": {
+      "version": "7.0.0",
+      "resolved": "https://registry.npmjs.org/wrap-ansi/-/wrap-ansi-7.0.0.tgz",
+      "integrity": "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==",
+      "license": "MIT",
+      "dependencies": {
+        "ansi-styles": "^4.0.0",
+        "string-width": "^4.1.0",
+        "strip-ansi": "^6.0.0"
+      },
+      "engines": {
+        "node": ">=10"
+      },
+      "funding": {
+        "url": "https://github.com/chalk/wrap-ansi?sponsor=1"
+      }
+    },
+    "node_modules/y18n": {
+      "version": "5.0.8",
+      "resolved": "https://registry.npmjs.org/y18n/-/y18n-5.0.8.tgz",
+      "integrity": "sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==",
+      "license": "ISC",
+      "engines": {
+        "node": ">=10"
+      }
+    },
+    "node_modules/yargs": {
+      "version": "17.7.2",
+      "resolved": "https://registry.npmjs.org/yargs/-/yargs-17.7.2.tgz",
+      "integrity": "sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w==",
+      "license": "MIT",
+      "dependencies": {
+        "cliui": "^8.0.1",
+        "escalade": "^3.1.1",
+        "get-caller-file": "^2.0.5",
+        "require-directory": "^2.1.1",
+        "string-width": "^4.2.3",
+        "y18n": "^5.0.5",
+        "yargs-parser": "^21.1.1"
+      },
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/yargs-parser": {
+      "version": "21.1.1",
+      "resolved": "https://registry.npmjs.org/yargs-parser/-/yargs-parser-21.1.1.tgz",
+      "integrity": "sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==",
+      "license": "ISC",
+      "engines": {
+        "node": ">=12"
+      }
+    }
+  }
+}
+
+
+==================================================
+RUTA DEL ARCHIVO: package.json
+==================================================
+
+{
+  "dependencies": {
+    "firebase": "^12.4.0"
+  }
+}
+
+
+==================================================
+RUTA DEL ARCHIVO: firebase-config.js
+==================================================
+
+export const firebaseConfig = {
+    apiKey: "AIzaSyCCIRk9Vip1J5Zc8xAeObsU6poc-J8lcj0",
+    authDomain: "cannabia-9dfe3.firebaseapp.com",
+    projectId: "cannabia-9dfe3",
+    storageBucket: "cannabia-9dfe3.firebasestorage.app",
+    messagingSenderId: "605207982385",
+    appId: "1:605207982385:web:58254637495b2b6d2bc010",
+    measurementId: "G-6M1WRYG1PS"
+};
+
+==================================================
+RUTA DEL ARCHIVO: server.log
+==================================================
+
+
+
+==================================================
+RUTA DEL ARCHIVO: jules-scratch/verification/verification.png
+==================================================
+
+PNG
+
+   
+IHDR        @J   IDATxtU}$BbyUdT_K"):S)VkQ-kthvljW*](bEt&%hI<Hȋ{ޘ@^'>03u}2N   >2"          `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `             `       8㙙iii?мyWRcCc GG D)deebJ~gfeדּ8bii99)=ښDss@ux\'LzFr08U+DZZZ)="(ډҒ {3i_Kv2{dF{WD t } i{ %:ʹ4P$H;Slt!8)Yh`!lbN"k$   A0pdFWg5F  `#ळj#   A   SǔB8<#   A     @0   Ap,q$
+
+.S+.0   `          1tVD f   `             `        I]zV^TղY3.  e	` }iڏEQ9?{ E 
+~./YoW̌:)kO콇sviQ;|ׇu?Z_m/m  :O?uȬ=g<~?\TѪLrݸ浼FU[6n^nтx
+)Z<qQ߻y@7 $w?òZճ(w?IfRFySf:*/ں_A ݂ [_`g)o:|՜ϮsKug\wϡ{4.|WQϦ~ŲvWC|(nE -U|޻^F9/d]yjk7N+,/plמ >0 '];xzrgfr#PU_UyK3ɫk-^g;WMsnf&]1n3.PWm-M%/̞򺖹Y/}i o}[_kv߸/Է 7/uܪ|-9hcۯ~uu_׿}g=Sk⃎YdU|:W{~]^\Tz3O|J/gSݲ
+kV.-Kշ\*艗^1n'?/.[aͺ
+A3ϸᩙl`ةS`a} ek<{7}G b2\rC7L|V^ေS
+Fi)i3]=}~Q\}#6厞rY׳0^0o`v:&+k o}CYCWcc-G`}dN3麩}۽}=ϸf;7Y8(7yc6,XRrģX=yƏoPt=H=nu7-A5F+*4*
+ Z (	Ԓ5lKo#߼ߗch3l]=憲[_7?]}A2O{!{
+R|QyW0.?::Y'!{x+9MSWX@ U/~9o<ҫ
+؛MƎ9)9x;A,߼W*:m!#u`|ՂV57n\V2I7:~pvg>0eZ
+eQs_
+k-:b<ɿQ}UzMΙrǔ}|f3_0醛{^xѤ'-?rsƾYe7[<#F_0%_	ׯX05Q_t¾-Ô*iY^=dmɗ^Q}yӶ ?@_%t_Z=u\P8oafTuX+uɸϖ-Uy޶,8hK6/_x{}?emU}#ͽg|AL=շ'?{ݿxi'zU]swFC^>jS>3T'kko,X:zu٦Ջ|cx#aO_JZY/qGh/?6~wsl-~ꖽ;xP~k̂ E=0Ra{Qr@企#[_8tO݆Z5庉Y[%F/u~w?574>ԀKCcߢyL}ٯrϾ(jdlZsK7^ҒKz͑[_ÿ,_:W:b1_凎׿ܜw'}c4rO3gJ&H1Jc#YY=mrWt̶v   IDATk|;-WyƎp? 8[mWLxs5deVxy}pVfa+c͛s;9h@a[V/f>yz_vGڭjC<b홗?Se_* X QZ*sWoߺ/<^Y|оmx}.]}מ[&˾[_V8b#`{~o_~-ZSgs)l:<]poU 0'G}Uk|<mpQrܲ;f9nľ!wvz5#tY;>6RP_5a̕{wu
+;Jm~.:@w}_~ZeyG7jxᾃW6ZWm=-n+J Qi;f235ygV[fo\
+5zPteflꅃ^9X;[jG_0it[Yg>O=|wn8~¢
+/WmZt;|}3?P7 N"# |/}a+sh}O
+dz4^rY'V?,e=AWx	JfܑiwNy#.GܴylZr\<cpW~ְlZ⢲qEt21Z^#9;ewF?%%-otե-,>göK_uŔ!l{5р	Sovv_⫝9  PO%Ϝ3w,謾cL;et;hغx~2/±3;#:!?v.,{s=j(}1f󆍟>v}2O|[Q;da(Ьz_:K}Ģx NSD9+:eGmjXoe<;ckp{_-7F[z߻{#qU_~+nyɽv_}HaFZwZ4gMӦ\8hP
+g)7O<jWyw<gcaͯ]R.cGyFiUeKmXsfRcuZWߞࢩn4v؁QT]buɛs<d}q#O
+??`U}+ܑZ-og'䥙>.  'DO
+ hK"hgysgd2I!k{*_, h`             `             `             `             `             `             `             `             `          i _?  \FRVEߛq9-8xdimtjoú- @(0@*kl3Ye_lZw7yǕo?/oG   f_1w39z}^͹]no}dޖ_;yܹ+^{䗏[Q;lh>_/hl/wx" }ޟpay3o
+{OԬ6'ڽGo<;s˒9>em</G  !2SW;ݏJZlJ}(Zrvc[>30Ʋy~m}hw/87F   }lsOvnؾi{Mm=g+*O}x	]5E3wpcaNr `>Zа''}I}p
+eoLmd &	֫xHAYW{eF   -s>uߘncUv͕ZUp-c)gd  He>q/;zU/rfoG5>ˇD  a mI$,oN읟[&bme, h`             `             `             `n deeedXuChjj-++K$ V@իWQQQMMmSSs]]lHIrJKK? Ha vji۶UD@I~ ؘ<Q_PPP}TcMF@ʫyZ~~^^^@ )*|D͎O?= HI E﨩n  %	`h%HD $zJm|F $GHQ֗u,+h             `             `             `             `             `             `   bXt+ɷm0@0O6 HI EԤn&--- HI ED@]VV0@J$99M$߰}Q@ r۶mƁ[3g򪪪T* )mmMŧԔ222rs[~/@ 2Q EOԑLfǆ
+" R(n 9[* 0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A   Sr" :'Gvv|aM_PnھnWsgg,k` Ͼcr2?mâ>C>Uq5>/o컷|t֌- I$RW_WϬ*8Q^6f6|M6y-f,|4 8b~jh@[D;[&Ϗ/k5E+y㍍5N~5ZV#\-{76,5/)Ω)]Gf)*^;,sϽ4|=3__1:󵿼aC4l߰zIEKkg)>g{'aμ˦~mТޙ5e*&/,>?FeCO.\|M/rW5e,1"
+ [F-SڼhN>Os74߅[&-?/o
+{ﮫNs
+#?[埾2YǕ%۾5+++s;#/,Vףxx~eoKk,;5{|ׯ.YWQ[͵'SNoO'Lڙ~&9/ª7?=&Y풅+{
+ҳt᳏<k~o^X.:> ]2{jJo.ջl#O[]eV3lȂx
+ۗ<5/߲l30^>vO̞ʊ-5e=ko.p'g[;肳U[-b+-*k?=拟ݓ3羷r$:kܨ=cټ֋W¼Ug%$7/| f   IDAT-'7g f`Tx]TYՕ׬[_*,i(ް555ٽN͌67${S;.1Ძ&2y9hXTqwVX{6F9}rW
+}7(ky55~cK*EU50wc4w<o
+ p`հ}Ö1}ߪl+
+C9غGqIߺmRGjCiY4ewKj<~Kp!}NlXGjrۿuv鯟
+oF f
+4@j,[p}/^6n;Ǔ+zZxOݸ%:U<qY1ޫx`Wݼ3|ߙ1g]AEgȰxaY1VmJӉ t HU>xό;_s7?pŷ^|1g٫d`{yka}kn8+<^txwߜrV pє/կs>3O~FˎǳS]tmX"3+rdko/ pb
+jVlOZl_~s.l`tk~oW,e߽_q ry㪗9uS7ēe_>rs'O֫53$DŻOkvmz]nC͟ʷ,{aexqk!xɼ3gB = :5F         `             `             `    X,VXXa
+,HD 6[Q W^EEE55MMuu6!u$?J~&u)Ç/-* 	`vک?mV'TcccD}}CAAaZZ# RUZ@J&79)fiyyy J X,:ygt5;jO?7 %	`&Ꚃ$RTnnn9D"0@ѣGSSSt+ɷm Eedd#vo[_
+         `             `             `             `             `             `      BZ@JjjjbЭ$߶7o@J ).#<fo7 %	`USSf7 %	`U^^JnnvYYY@J )*HdG@7|~G J m۶ngϜʫ" Rë ۷577^SSkWsSSSrd8RC,HKKmU )N F򂂂=RG36 Hy oY    A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0@794p|c٧yUڏ;?l.{5QA@j mI$,oN읟 ̴O# U%w쮏%vE_֭ɟXZb[9-a#;;:޲f5#=t{@HIJ;s+Ɗ8۹3j?t0@{lQӲ#H|F *r]J6{`@J )*Ef>C|ۦjb@Jrh)\ HQ U HU EeD@7yj@J   A     @0   A )}?~A+]
+=?/=+־;r  p"
+ʺ(> p	` _}g>ur{ߙfz;# = :.qmëO43?&iM˪[5w>Ӱ6~ذNLh~W>/e[V9˯ʹlhFaFͥYP{M-zo98>ÌkΏu|>6 I @Ŋe~qo 76icʺ{Ogn|][+qWpϵo}msU<0V7ʼAʿ}+
+;{ 8, ;w|χ=8>:kqo~*o(=/s;~/z}_m=N͘ڴAyv=˦4nl;;ep<v羵caAXxǝi((ul- 8 Ncc[(3j\[ۣ8;^:-}Q]k[ϿǴI_ܧӋb==s{ʎ
+;k]Ұ2 G @5[mqmsUcDXV<:]+*mѹ3cp[W<6m H cIQo>YӕZ>ʧ۹  # q+;tDXςCg"2TڵMkD Q q+JߪG8TǦyߝ߲}T>坻.mƧ3o~I剼y pLz;[Qّ&yW$8V+n ;SC# ڒH$Yޜ;??:2=5WbX푌X,S         `           E57lnț e	`Yݐ7/@ )64tS޼ )K -$#[Imr@J nӮOt+>|20@ڵ5M4Xko# RU) H#;;:bQykXZ,XGͻvmzvĢ۹33yi{ ]pծDhWC#!XE2e~
+k2" R^]D    @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   !-K#0@Ējj N+X@'	`.IaebDDDjN4E{WD t Dsڝ	TW3HD t ;ENj'O- hag&v_e.bzF۹sǎ}9E {"Kۻp,QАͻvj\__<UP@	`c a6}K: dG=x7wbE֚gG1pmmtuI ]&,v(sDyΈ vk1vw߆;p8ms>d'*@=ܺD! 8J}_oQ_wv @	`wh
+tRC _"pR֑kbWNjwq䵉 GdX=չ#[HCާ GvCab笍[m];p9p,q!:ÃcK$1qG.2B  IDAT:H tT )q
+	64b)sln)0@N:+".0@W<]:Mt :H(	`oT	ǃ8V01sFF'x	 R0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   A     @0   A   <3   IDAT O6    IENDB`
+
+==================================================
+RUTA DEL ARCHIVO: jules-scratch/verification/verify_app_loads.py
+==================================================
+
+from playwright.sync_api import sync_playwright, expect
+
+def run_verification():
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+
+        # Navigate to the local server
+        page.goto("http://localhost:8080")
+
+        # Wait for the login form to be visible, which indicates the app has loaded past the initial error
+        login_form = page.locator("#login-form")
+        expect(login_form).to_be_visible(timeout=10000) # Increased timeout for initial load
+
+        # Take a screenshot
+        page.screenshot(path="jules-scratch/verification/verification.png")
+
+        browser.close()
+
+if __name__ == "__main__":
+    run_verification()
+
+==================================================
+RUTA DEL ARCHIVO: src/style.css
+==================================================
+
+.hidden { display: none; }
+        .view { transition: opacity 0.3s ease-in-out; }
+
+==================================================
+RUTA DEL ARCHIVO: src/app.js
+==================================================
+
+// Importa las funciones que necesitas de los SDKs de Firebase
+        import { firebaseConfig } from '../firebase-config.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment, runTransaction, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
+
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let currentUser = null;
+        let activeListeners = [];
+
+        function cleanupListeners() {
+            activeListeners.forEach(unsubscribe => unsubscribe());
+            activeListeners = [];
+        }
+
+        // --- GESTIÓN DE VISTAS (BLOQUE CORREGIDO) ---
+        const views = document.querySelectorAll('.view');
+        const menuItems = document.querySelectorAll('.menu-item');
+        const viewTitle = document.getElementById('view-title');
+        const backToMenuBtn = document.getElementById('back-to-menu');
+        const loadingView = document.getElementById('loading-view');
+        const loginView = document.getElementById('login-view');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const logoutButton = document.getElementById('logout-button');
+
+        function showView(viewId) {
+            views.forEach(view => view.classList.add('hidden'));
+            const activeView = document.getElementById(viewId);
+            if (activeView) {
+                activeView.classList.remove('hidden');
+
+                const isMenuView = viewId === 'main-menu-view';
+                backToMenuBtn.classList.toggle('hidden', isMenuView);
+
+                if (isMenuView) {
+                    viewTitle.textContent = 'Menú Principal';
+                } else {
+                    viewTitle.textContent = activeView.querySelector('h2').textContent;
+                }
+
+                // Si la vista es la de estadísticas, renderizar el gráfico
+                if (viewId === 'stats-view') {
+                    renderizarGraficoDispensas();
+                }
+            }
+        }
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const viewId = item.dataset.view;
+                showView(viewId);
+            });
+        });
+
+        backToMenuBtn.addEventListener('click', () => showView('main-menu-view'));
+
+        // --- LÓGICA DE AUTENTICACIÓN ---
+        setPersistence(auth, browserLocalPersistence);
+
+        onAuthStateChanged(auth, user => {
+            cleanupListeners(); // Clean up listeners from previous user, if any
+            loadingView.classList.add('hidden');
+            if (user) {
+                currentUser = user;
+                loginView.classList.add('hidden');
+                appContainer.classList.remove('hidden');
+                showView('main-menu-view');
+                listenToSocios();
+                listenToHistory();
+                listenToArticles();
+                listenToSociosForTPV();
+                listenToArticlesForTPV();
+            } else {
+                currentUser = null;
+                appContainer.classList.add('hidden');
+                loginView.classList.remove('hidden');
+            }
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const loginError = document.getElementById('login-error');
+            loginError.textContent = '';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                loginError.textContent = 'Credenciales incorrectas.';
+                console.error("Login Error:", error);
+            }
+        });
+
+        logoutButton.addEventListener('click', () => {
+            cleanupListeners();
+            signOut(auth);
+        });
+
+        // --- MÓDULO DE SOCIOS ---
+        const sociosList = document.getElementById('socios-list');
+        const addSocioModalOverlay = document.getElementById('add-socio-modal-overlay');
+        const addSocioForm = document.getElementById('add-socio-form');
+        const socioIdPhotoInput = document.getElementById('socio-id-photo');
+        const closeAddSocioModalBtn = document.getElementById('close-add-socio-modal');
+        const cancelAddSocioBtn = document.getElementById('cancel-add-socio');
+        const socioDetailsModalOverlay = document.getElementById('socio-details-modal-overlay');
+        const socioDetailsModalTitle = document.getElementById('socio-details-modal-title');
+        const socioDetailsContent = document.getElementById('socio-details-content');
+        const closeSocioDetailsModalBtn = document.getElementById('close-socio-details-modal');
+
+        async function showPartnerDetails(socioId, socioNombre) {
+            socioDetailsModalTitle.textContent = `Historial de ${socioNombre}`;
+            socioDetailsModalOverlay.classList.remove('hidden');
+            socioDetailsContent.innerHTML = '<p class="text-center p-8">Cargando historial...</p>';
+
+            try {
+                const dispensasRef = collection(db, "dispensas");
+                const q = query(dispensasRef, where("idSocio", "==", socioId), orderBy("fecha", "desc"));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    socioDetailsContent.innerHTML = '<p class="text-center p-8 text-gray-400">Este socio no tiene dispensas registradas.</p>';
+                    return;
+                }
+
+                let html = '<div class="space-y-3">';
+                querySnapshot.forEach(doc => {
+                    const dispensa = doc.data();
+                    const fecha = formatFirebaseTimestamp(dispensa.fecha);
+                    html += `
+                        <div class="bg-gray-700 p-3 rounded-lg flex justify-between items-center">
+                            <div>
+                                <p class="font-semibold">${dispensa.nombreArticulo}</p>
+                                <p class="text-sm text-gray-400">${fecha}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-green-400">${dispensa.precioTotal.toFixed(2)} €</p>
+                                <p class="text-sm text-gray-300">Cantidad: ${dispensa.cantidad}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                socioDetailsContent.innerHTML = html;
+
+            } catch (error) {
+                console.error("Error al obtener el historial del socio:", error);
+                socioDetailsContent.innerHTML = '<p class="text-center p-8 text-red-500">No se pudo cargar el historial. Inténtalo de nuevo.</p>';
+                showToast("Error al cargar el historial.", true);
+            }
+        }
+
+        function closeSocioDetailsModal() {
+            socioDetailsModalOverlay.classList.add('hidden');
+            socioDetailsContent.innerHTML = '<p class="text-center p-8">Cargando historial...</p>'; // Reset content
+        }
+
+        closeSocioDetailsModalBtn.addEventListener('click', closeSocioDetailsModal);
+        socioDetailsModalOverlay.addEventListener('click', (e) => {
+            if (e.target === socioDetailsModalOverlay) {
+                closeSocioDetailsModal();
+            }
+        });
+
+
+        function getSociosCollectionRef() {
+            if (!currentUser || !firebaseConfig.appId) {
+                console.error("User not logged in or appId not configured");
+                return null;
+            }
+            return collection(db, `artifacts/${firebaseConfig.appId}/users/${currentUser.uid}/socios`);
+        }
+
+        function optimizeImage(file, maxSize = 1024, quality = 0.7) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > maxSize) {
+                                height *= maxSize / width;
+                                width = maxSize;
+                            }
+                        } else {
+                            if (height > maxSize) {
+                                width *= maxSize / height;
+                                height = maxSize;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            resolve(blob);
+                        }, 'image/jpeg', quality);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function listenToSocios() {
+            const sociosCollectionRef = getSociosCollectionRef();
+            if (!sociosCollectionRef) return;
+
+            const q = query(sociosCollectionRef, orderBy("apellido", "asc"));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                sociosList.innerHTML = '';
+                if (snapshot.empty) {
+                    sociosList.innerHTML = '<tr><td colspan="4" class="py-4 px-6 text-center text-gray-500">No hay socios registrados.</td></tr>';
+                    return;
+                }
+                snapshot.forEach(doc => {
+                    const socio = doc.data();
+                    const hoy = new Date();
+                    let estadoFinal = socio.estado;
+                    let filaClass = '';
+
+                    if (socio.estado === 'Verde' && socio.fecha_caducidad_pago && socio.fecha_caducidad_pago.toDate() < hoy) {
+                        estadoFinal = 'Gris';
+                        filaClass = 'bg-yellow-900'; // Highlight expired
+                    }
+
+                    const statusInfo = {
+                        'Gris': { color: 'bg-gray-500', text: 'Pendiente' },
+                        'Rojo': { color: 'bg-red-500', text: 'Non Grata' },
+                        'Verde': { color: 'bg-green-500', text: 'Pagado' }
+                    };
+                    const currentStatus = statusInfo[estadoFinal];
+
+                    const socioElement = `
+                        <tr class="${filaClass} border-b border-gray-700">
+                            <td class="py-4 px-6">${socio.nombre}</td>
+                            <td class="py-4 px-6">${socio.apellido}</td>
+                            <td class="py-4 px-6">
+                                <span class="px-2 py-1 font-semibold leading-tight text-white rounded-full ${currentStatus.color}">
+                                    ${currentStatus.text}
+                                </span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <button data-id="${doc.id}" data-estado="${socio.estado}" class="change-status-btn text-blue-400 hover:underline">Cambiar Estado</button>
+                                <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" data-url="${socio.url_foto_id}" class="view-details-btn text-blue-400 hover:underline ml-4">Ver Detalles</button>
+                            </td>
+                        </tr>
+                    `;
+                    sociosList.innerHTML += socioElement;
+                });
+            });
+            activeListeners.push(unsubscribe);
+        }
+
+        addSocioForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Validación
+            const nombre = document.getElementById('socio-nombre').value.trim();
+            const apellido = document.getElementById('socio-apellido').value.trim();
+            const file = socioIdPhotoInput.files[0];
+            let isValid = true;
+
+            // Limpiar errores previos
+            document.getElementById('error-nombre').textContent = '';
+            document.getElementById('error-apellido').textContent = '';
+            document.getElementById('error-foto').textContent = '';
+            document.getElementById('form-error').classList.add('hidden');
+
+            if (!nombre) {
+                document.getElementById('error-nombre').textContent = 'El nombre es obligatorio.';
+                isValid = false;
+            }
+            if (!apellido) {
+                document.getElementById('error-apellido').textContent = 'El apellido es obligatorio.';
+                isValid = false;
+            }
+            if (!file) {
+                document.getElementById('error-foto').textContent = 'La foto del DNI es obligatoria.';
+                isValid = false;
+            }
+
+            if (!isValid) return;
+
+            const submitBtn = document.getElementById('submit-socio-btn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const spinner = submitBtn.querySelector('.spinner');
+
+            // --- Feedback de envío ---
+            submitBtn.disabled = true;
+            btnText.textContent = 'Guardando...';
+            spinner.classList.remove('hidden');
+
+            try {
+                const sociosCollectionRef = getSociosCollectionRef();
+                if (!sociosCollectionRef) {
+                    throw new Error('Error de autenticación. Inténtalo de nuevo.');
+                }
+
+                // Step 1: Create the document in Firestore to get an ID
+                const newSocioRef = doc(sociosCollectionRef);
+
+                const newSocioData = {
+                    nombre,
+                    apellido,
+                    estado: 'Gris',
+                    fecha_ingreso: serverTimestamp(),
+                    fecha_caducidad_pago: null,
+                    url_foto_id: '' // Initialize with empty string
+                };
+
+                // Set the initial data
+                await setDoc(newSocioRef, newSocioData);
+
+                // Step 2: If there's a file, optimize and upload it
+                if (file) {
+                    const optimizedBlob = await optimizeImage(file);
+                    const storageRef = ref(storage, `socios_ids/${newSocioRef.id}.jpg`);
+                    await uploadBytes(storageRef, optimizedBlob);
+
+                    // Step 3: Get the download URL
+                    const downloadURL = await getDownloadURL(storageRef);
+
+                    // Step 4: Update the document with the URL
+                    await updateDoc(newSocioRef, {
+                        url_foto_id: downloadURL
+                    });
+                }
+
+                showToast('Socio añadido correctamente.');
+                closeSocioModal();
+
+            } catch (error) {
+                console.error("Error al guardar el socio:", error);
+                showToast('Error al guardar el socio.', true);
+                document.getElementById('form-error').textContent = error.message;
+                document.getElementById('form-error').classList.remove('hidden');
+            } finally {
+                // --- Restaurar botón ---
+                submitBtn.disabled = false;
+                btnText.textContent = 'Guardar';
+                spinner.classList.add('hidden');
+            }
+        });
+
+        sociosList.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('change-status-btn')) {
+                const socioId = e.target.dataset.id;
+                let currentEstado = e.target.dataset.estado;
+                let newEstado;
+                let fechaCaducidad = null;
+
+                if (currentEstado === 'Gris') {
+                    newEstado = 'Verde';
+                    const futureDate = new Date();
+                    futureDate.setDate(futureDate.getDate() + 365);
+                    fechaCaducidad = futureDate;
+                } else if (currentEstado === 'Verde') {
+                    newEstado = 'Rojo';
+                } else { // Rojo
+                    newEstado = 'Gris';
+                }
+
+                const sociosCollectionRef = getSociosCollectionRef();
+                if (!sociosCollectionRef) return;
+
+                const socioRef = doc(sociosCollectionRef, socioId);
+                await updateDoc(socioRef, {
+                    estado: newEstado,
+                    fecha_caducidad_pago: fechaCaducidad
+                });
+            }
+
+            if (e.target.classList.contains('view-details-btn')) {
+                const socioId = e.target.dataset.id;
+                const socioNombre = e.target.dataset.nombre;
+                showPartnerDetails(socioId, socioNombre);
+            }
+        });
+
+        document.getElementById('close-view-id-modal').addEventListener('click', () => {
+            document.getElementById('view-id-modal').classList.add('hidden');
+        });
+
+        // --- TOAST NOTIFICATION ---
+        function showToast(message, isError = false) {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const baseClasses = 'p-4 rounded-lg shadow-lg text-white mb-2 transition-all duration-300';
+            const bgColor = isError ? 'bg-red-600' : 'bg-green-600';
+            toast.className = `${baseClasses} ${bgColor}`;
+            toast.textContent = message;
+
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function closeSocioModal() {
+            addSocioForm.reset();
+            addSocioModalOverlay.classList.add('hidden');
+            // Limpiar errores
+            document.getElementById('error-nombre').textContent = '';
+            document.getElementById('error-apellido').textContent = '';
+            document.getElementById('error-foto').textContent = '';
+            document.getElementById('form-error').classList.add('hidden');
+        }
+
+        document.getElementById('show-add-socio-modal').addEventListener('click', () => addSocioModalOverlay.classList.remove('hidden'));
+
+        cancelAddSocioBtn.addEventListener('click', closeSocioModal);
+        closeAddSocioModalBtn.addEventListener('click', closeSocioModal);
+
+        addSocioModalOverlay.addEventListener('click', (e) => {
+            if (e.target === addSocioModalOverlay) {
+                closeSocioModal();
+            }
+        });
+
+        // --- MÓDULO DE ARTÍCULOS (STOCK) ---
+        const formArticulo = document.getElementById('form-articulo');
+        const listaArticulosContainer = document.getElementById('lista-articulos-container');
+        const categoriasDatalist = document.getElementById('categorias-datalist');
+        const loadStockModalOverlay = document.getElementById('load-stock-modal-overlay');
+        const loadStockModalTitle = document.getElementById('load-stock-modal-title');
+        const loadStockForm = document.getElementById('load-stock-form');
+        const cancelLoadStockBtn = document.getElementById('cancel-load-stock');
+        let currentArticleForStockLoad = null;
+
+        function openLoadStockModal(articleId, articleName) {
+            currentArticleForStockLoad = { id: articleId, nombre: articleName };
+            loadStockModalTitle.textContent = `Cargando stock para: ${articleName}`;
+            loadStockModalOverlay.classList.remove('hidden');
+        }
+
+        function closeLoadStockModal() {
+            loadStockForm.reset();
+            currentArticleForStockLoad = null;
+            loadStockModalOverlay.classList.add('hidden');
+        }
+
+        listaArticulosContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('load-stock-btn')) {
+                const articleId = e.target.dataset.id;
+                const articleName = e.target.dataset.nombre;
+                openLoadStockModal(articleId, articleName);
+            }
+        });
+
+        cancelLoadStockBtn.addEventListener('click', closeLoadStockModal);
+        loadStockModalOverlay.addEventListener('click', (e) => {
+            if (e.target === loadStockModalOverlay) {
+                closeLoadStockModal();
+            }
+        });
+
+        loadStockForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentArticleForStockLoad) return;
+
+            const cantidadInput = document.getElementById('stock-cantidad-input');
+            const cantidad = Number(cantidadInput.value);
+
+            if (!cantidad || cantidad <= 0) {
+                showToast("Por favor, introduce una cantidad positiva.", true);
+                return;
+            }
+
+            const { id: articleId, nombre: articleName } = currentArticleForStockLoad;
+            const articleRef = doc(db, "articulos", articleId);
+
+            try {
+                // 1. Actualizar stock atómicamente
+                await updateDoc(articleRef, {
+                    stock: increment(cantidad)
+                });
+
+                // 2. Registrar en historial
+                await addDoc(collection(db, "historial"), {
+                    tipo: "recarga",
+                    descripcion: `Recarga de ${cantidad} uds. de "${articleName}"`,
+                    fecha: serverTimestamp()
+                });
+
+                showToast(`Stock de "${articleName}" actualizado con éxito.`);
+                closeLoadStockModal();
+            } catch (error) {
+                console.error("Error updating stock: ", error);
+                showToast("Error al actualizar el stock.", true);
+            }
+        });
+
+        function listenToArticles() {
+            // FIX: Se elimina el orden compuesto para no depender de un índice de Firestore.
+            // El orden se aplica ahora en el lado del cliente.
+            const q = query(collection(db, "articulos"));
+
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                if (snapshot.empty) {
+                    listaArticulosContainer.innerHTML = '<p class="text-gray-500 text-center">No hay artículos en el inventario.</p>';
+                    return;
+                }
+
+                const allCategories = new Set();
+                const articulosPorCategoria = snapshot.docs.reduce((acc, doc) => {
+                    const article = { id: doc.id, ...doc.data() };
+                    const category = article.categoria || 'Sin Categoría';
+                    allCategories.add(category);
+                    if (!acc[category]) {
+                        acc[category] = [];
+                    }
+                    acc[category].push(article);
+                    return acc;
+                }, {});
+
+                // Ordenar artículos dentro de cada categoría por nombre
+                for (const category in articulosPorCategoria) {
+                    articulosPorCategoria[category].sort((a, b) => a.nombre.localeCompare(b.nombre));
+                }
+
+                // Actualizar Datalist con categorías ordenadas
+                categoriasDatalist.innerHTML = '';
+                Array.from(allCategories).sort().forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    categoriasDatalist.appendChild(option);
+                });
+
+                listaArticulosContainer.innerHTML = '';
+
+                // Obtener y ordenar las claves de categoría para renderizar en orden
+                const sortedCategories = Object.keys(articulosPorCategoria).sort((a, b) => a.localeCompare(b));
+
+                for (const category of sortedCategories) {
+                    const categoryContainer = document.createElement('div');
+                    categoryContainer.className = 'bg-gray-800 p-4 rounded-lg';
+
+                    const categoryTitle = document.createElement('h2');
+                    categoryTitle.className = 'text-xl font-semibold mb-3 text-blue-400 border-b border-gray-700 pb-2';
+                    categoryTitle.textContent = category;
+                    categoryContainer.appendChild(categoryTitle);
+
+                    const itemsContainer = document.createElement('div');
+                    itemsContainer.className = 'space-y-2 mt-3';
+
+                    articulosPorCategoria[category].forEach(article => {
+                        const articleElement = document.createElement('div');
+                        articleElement.className = 'grid grid-cols-1 sm:grid-cols-4 items-center gap-4 p-2 rounded-md hover:bg-gray-700/50';
+                        articleElement.dataset.id = article.id;
+
+                        const precio = article.precioPorUnidad || 0;
+                        const stock = article.stock || 0;
+
+                        articleElement.innerHTML = `
+                            <div class="sm:col-span-2">
+                                <p class="font-medium">${article.nombre}</p>
+                                <p class="text-xs text-gray-400">Categoría: ${article.categoria} | Precio: ${precio.toFixed(2)}€</p>
+                            </div>
+                            <p>Stock: <span class="font-bold">${stock}</span></p>
+                            <div class="sm:col-span-1 sm:text-right">
+                                <button data-id="${article.id}" data-nombre="${article.nombre}" class="load-stock-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+                                    Cargar Stock
+                                </button>
+                            </div>
+                        `;
+                        itemsContainer.appendChild(articleElement);
+                    });
+
+                    categoryContainer.appendChild(itemsContainer);
+                    listaArticulosContainer.appendChild(categoryContainer);
+                }
+            });
+            activeListeners.push(unsubscribe);
+        }
+
+        formArticulo.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('article-nombre').value.trim();
+            const categoria = document.getElementById('article-categoria').value.trim();
+            const unidadMinimaVenta = Number(document.getElementById('article-unidad').value);
+            const precioPorUnidad = Number(document.getElementById('article-precio').value);
+
+            if (!nombre || !categoria || !unidadMinimaVenta || precioPorUnidad < 0) {
+                showToast("Por favor, completa todos los campos correctamente.", true);
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "articulos"), {
+                    nombre,
+                    categoria,
+                    unidadMinimaVenta,
+                    precioPorUnidad,
+                    stock: 0,
+                    createdAt: serverTimestamp()
+                });
+                showToast(`Artículo "${nombre}" añadido con éxito.`);
+                formArticulo.reset();
+            } catch (error) {
+                console.error("Error adding article: ", error);
+                showToast("Hubo un error al añadir el artículo.", true);
+            }
+        });
+
+
+        // --- MÓDULO DE TPV ---
+        const tpvSocioSelect = document.getElementById('tpv-socio-select');
+        const tpvArticuloSelect = document.getElementById('tpv-articulo-select');
+        const tpvCantidadInput = document.getElementById('tpv-cantidad');
+        const resumenSocio = document.getElementById('resumen-socio');
+        const resumenArticulo = document.getElementById('resumen-articulo');
+        const resumenCantidad = document.getElementById('resumen-cantidad');
+        const resumenTotal = document.getElementById('resumen-total');
+        const realizarDispensaBtn = document.getElementById('realizar-dispensa-btn');
+
+        function listenToSociosForTPV() {
+            const sociosCollectionRef = getSociosCollectionRef();
+            if (!sociosCollectionRef) return;
+
+            const q = query(sociosCollectionRef, orderBy("apellido", "asc"));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const currentSelection = tpvSocioSelect.value;
+                tpvSocioSelect.innerHTML = '<option disabled selected value="">Seleccione un socio...</option>';
+                snapshot.forEach(doc => {
+                    const socio = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = `${socio.nombre} ${socio.apellido}`;
+                    tpvSocioSelect.appendChild(option);
+                });
+                if (currentSelection) {
+                    tpvSocioSelect.value = currentSelection;
+                }
+            });
+            activeListeners.push(unsubscribe);
+        }
+
+        function listenToArticlesForTPV() {
+            const q = query(collection(db, "articulos"), orderBy("nombre"));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const currentSelection = tpvArticuloSelect.value;
+                tpvArticuloSelect.innerHTML = '<option disabled selected value="">Seleccione un artículo...</option>';
+                snapshot.forEach(doc => {
+                    const article = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = article.nombre;
+                    option.dataset.precio = article.precioPorUnidad || 0;
+                    tpvArticuloSelect.appendChild(option);
+                });
+                if (currentSelection) {
+                    tpvArticuloSelect.value = currentSelection;
+                }
+            });
+            activeListeners.push(unsubscribe);
+        }
+
+        function actualizarResumenTPV() {
+            const socioId = tpvSocioSelect.value;
+            const articuloId = tpvArticuloSelect.value;
+            const cantidad = parseInt(tpvCantidadInput.value, 10);
+
+            const isSocioValid = socioId && socioId !== "";
+            const isArticuloValid = articuloId && articuloId !== "";
+            const isCantidadValid = !isNaN(cantidad) && cantidad > 0;
+
+            if (isSocioValid) {
+                resumenSocio.textContent = tpvSocioSelect.options[tpvSocioSelect.selectedIndex].text;
+            } else {
+                resumenSocio.textContent = '--';
+            }
+
+            if (isArticuloValid) {
+                resumenArticulo.textContent = tpvArticuloSelect.options[tpvArticuloSelect.selectedIndex].text;
+            } else {
+                resumenArticulo.textContent = '--';
+            }
+
+            if (isCantidadValid) {
+                resumenCantidad.textContent = cantidad;
+            } else {
+                resumenCantidad.textContent = '--';
+            }
+
+            const allValid = isSocioValid && isArticuloValid && isCantidadValid;
+
+            if (allValid) {
+                const selectedArticuloOption = tpvArticuloSelect.options[tpvArticuloSelect.selectedIndex];
+                const precioUnitario = parseFloat(selectedArticuloOption.dataset.precio || 0);
+                const total = cantidad * precioUnitario;
+                resumenTotal.textContent = `${total.toFixed(2)} €`;
+                realizarDispensaBtn.disabled = false;
+            } else {
+                resumenTotal.textContent = '0.00 €';
+                realizarDispensaBtn.disabled = true;
+            }
+        }
+
+        tpvSocioSelect.addEventListener('change', actualizarResumenTPV);
+        tpvArticuloSelect.addEventListener('change', actualizarResumenTPV);
+        tpvCantidadInput.addEventListener('input', actualizarResumenTPV);
+
+        async function procesarDispensa() {
+            const idSocioSeleccionado = tpvSocioSelect.value;
+            const idArticuloSeleccionado = tpvArticuloSelect.value;
+            const cantidadDispensada = parseInt(tpvCantidadInput.value, 10);
+
+            const nombreSocio = tpvSocioSelect.options[tpvSocioSelect.selectedIndex].text;
+            const selectedArticuloOption = tpvArticuloSelect.options[tpvArticuloSelect.selectedIndex];
+            const nombreArticulo = selectedArticuloOption.text;
+            const precioUnitario = parseFloat(selectedArticuloOption.dataset.precio || 0);
+            const aporteTotalCalculado = cantidadDispensada * precioUnitario;
+
+            realizarDispensaBtn.disabled = true;
+            realizarDispensaBtn.textContent = "Procesando...";
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const articuloRef = doc(db, "articulos", idArticuloSeleccionado);
+                    const sociosCollectionRef = getSociosCollectionRef();
+                    if (!sociosCollectionRef) {
+                        throw new Error("No se pudo obtener la referencia a la colección de socios.");
+                    }
+                    const socioRef = doc(sociosCollectionRef, idSocioSeleccionado);
+
+                    // 1. Leer el stock y el socio DENTRO de la transacción
+                    const articuloDoc = await transaction.get(articuloRef);
+                    const socioDoc = await transaction.get(socioRef);
+
+                    if (!articuloDoc.exists()) {
+                        throw "El artículo ya no existe.";
+                    }
+                    if (!socioDoc.exists()) {
+                        throw "El socio ya no existe.";
+                    }
+
+                    const stockActual = articuloDoc.data().stock;
+
+                    // 2. Validar el stock
+                    if (stockActual < cantidadDispensada) {
+                        throw "Stock insuficiente para realizar la dispensa.";
+                    }
+
+                    // 3. Si hay stock, realizar las operaciones de escritura
+                    const nuevoStock = stockActual - cantidadDispensada;
+                    transaction.update(articuloRef, { stock: nuevoStock });
+
+                    // 4. Crear el registro en la colección 'dispensas'
+                    const dispensaRef = doc(collection(db, "dispensas")); // Crea una referencia para un nuevo doc
+                    transaction.set(dispensaRef, {
+                        idSocio: idSocioSeleccionado,
+                        idArticulo: idArticuloSeleccionado,
+                        nombreArticulo: nombreArticulo,
+                        nombreSocio: nombreSocio,
+                        cantidad: cantidadDispensada,
+                        precioTotal: aporteTotalCalculado,
+                        fecha: serverTimestamp()
+                    });
+
+                    // 5. Crear el registro en la colección 'historial'
+                    const historialRef = doc(collection(db, "historial"));
+                    transaction.set(historialRef, {
+                        tipo: 'dispensa',
+                        descripcion: `Dispensa de ${cantidadDispensada} uds. de "${nombreArticulo}" a "${nombreSocio}"`,
+                        fecha: serverTimestamp()
+                    });
+                });
+
+                showToast("¡Dispensa realizada con éxito!");
+                // Resetear formulario TPV
+                tpvSocioSelect.value = '';
+                tpvArticuloSelect.value = '';
+                tpvCantidadInput.value = '';
+                actualizarResumenTPV();
+
+            } catch (error) {
+                console.error("Error en la transacción: ", error);
+                showToast(typeof error === 'string' ? error : "Error al procesar la dispensa.", true);
+            } finally {
+                realizarDispensaBtn.disabled = false;
+                realizarDispensaBtn.textContent = "REALIZAR DISPENSA";
+                actualizarResumenTPV(); // Re-evalúa el estado del botón
+            }
+        }
+
+        realizarDispensaBtn.addEventListener('click', procesarDispensa);
+
+
+        // --- MÓDULO DE HISTORIAL ---
+        const historialContainer = document.getElementById('historial-container');
+
+        /**
+         * Formatea un objeto Timestamp de Firestore a un string legible.
+         * Ejemplo: "16 de Octubre de 2025, 14:30"
+         * @param {object} timestamp - El objeto Timestamp de Firestore.
+         * @returns {string} La fecha formateada o un texto alternativo.
+         */
+        function formatFirebaseTimestamp(timestamp) {
+            if (!timestamp || typeof timestamp.toDate !== 'function') {
+                return 'Fecha no disponible';
+            }
+            const date = timestamp.toDate();
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return date.toLocaleDateString('es-ES', options);
+        }
+
+        function listenToHistory() {
+            const q = query(collection(db, "historial"), orderBy("fecha", "desc"));
+
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                historialContainer.innerHTML = ''; // Limpiar el contenedor antes de renderizar
+                if (snapshot.empty) {
+                    historialContainer.innerHTML = '<p class="text-center text-gray-500">Aún no hay operaciones registradas.</p>';
+                    return;
+                }
+
+                snapshot.forEach(doc => {
+                    const evento = doc.data();
+                    const formattedDate = formatFirebaseTimestamp(evento.fecha);
+
+                    // Determinar el estilo y el icono según el tipo de evento
+                    const isDispensa = evento.tipo === 'dispensa';
+                    const borderColorClass = isDispensa ? 'border-blue-500' : 'border-green-500';
+                    const icon = isDispensa ? '🛒' : '📦';
+
+                    // Crear el elemento del historial
+                    const eventoElement = document.createElement('div');
+                    eventoElement.className = `bg-gray-800 p-4 rounded-lg flex items-start gap-4 ${borderColorClass} border-l-4`;
+
+                    eventoElement.innerHTML = `
+                        <div class="text-2xl mt-1">${icon}</div>
+                        <div class="flex-grow">
+                            <p class="text-white">${evento.descripcion}</p>
+                            <p class="text-sm text-gray-400 mt-1">${formattedDate}</p>
+                        </div>
+                    `;
+
+                    historialContainer.appendChild(eventoElement);
+                });
+            });
+            activeListeners.push(unsubscribe);
+        }
+
+        // --- MÓDULO DE ESTADÍSTICAS (GRÁFICOS) ---
+        let dispensasChartInstance = null;
+        async function renderizarGraficoDispensas() {
+            const ctx = document.getElementById('grafico-ventas-semanal').getContext('2d');
+
+            // 1. Destruir instancia de gráfico anterior si existe
+            if (dispensasChartInstance) {
+                dispensasChartInstance.destroy();
+            }
+
+            try {
+                // 2. Calcular el rango de fechas (últimos 7 días)
+                const hoy = new Date();
+                const fechaHace7Dias = new Date();
+                fechaHace7Dias.setDate(hoy.getDate() - 7);
+                fechaHace7Dias.setHours(0, 0, 0, 0); // Empezar desde el inicio del día
+
+                // 3. Consultar TODAS las dispensas y filtrar en el cliente para evitar problemas de índices
+                const dispensasRef = collection(db, "dispensas");
+                const q = query(dispensasRef); // Sin filtro 'where'
+                const querySnapshot = await getDocs(q);
+
+                // 4. Procesar y agregar datos por día
+                const dispensasPorDia = {}; // { 'YYYY-MM-DD': total, ... }
+                querySnapshot.forEach(doc => {
+                    const dispensa = doc.data();
+                    if (dispensa.fecha && dispensa.fecha.toDate) {
+                        const fechaDispensa = dispensa.fecha.toDate();
+
+                        // Filtrado en el lado del cliente
+                        if (fechaDispensa >= fechaHace7Dias) {
+                            // Formato YYYY-MM-DD para usar como clave
+                            const diaKey = fechaDispensa.toISOString().split('T')[0];
+
+                            if (!dispensasPorDia[diaKey]) {
+                                dispensasPorDia[diaKey] = 0;
+                            }
+                            dispensasPorDia[diaKey] += dispensa.precioTotal;
+                        }
+                    }
+                });
+
+                // 5. Preparar labels y data para el gráfico
+                const labels = [];
+                const data = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    d.setHours(0,0,0,0);
+                    const diaKey = d.toISOString().split('T')[0];
+                    // Formatear la label para mostrar en el gráfico (ej: Oct 16)
+                    const labelFormatted = d.toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+
+                    labels.push(labelFormatted);
+                    data.push(dispensasPorDia[diaKey] || 0);
+                }
+
+                // 6. Renderizar el nuevo gráfico
+                dispensasChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Total Dispensado (€)',
+                            data: data,
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: '#9CA3AF' // Color de los ticks del eje Y (gris claro)
+                                },
+                                grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)' // Color de las líneas de la cuadrícula
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    color: '#9CA3AF' // Color de los ticks del eje X
+                                },
+                                 grid: {
+                                    color: 'rgba(255, 255, 255, 0.1)' // Color de las líneas de la cuadrícula
+                                }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: '#E5E7EB' // Color del texto de la leyenda
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error renderizando el gráfico de dispensas:", error);
+                // Opcional: Mostrar un mensaje de error en el canvas
+                ctx.font = "16px Arial";
+                ctx.fillStyle = "red";
+                ctx.textAlign = "center";
+                ctx.fillText("No se pudieron cargar los datos del gráfico.", ctx.canvas.width / 2, 50);
+            }
+        }
