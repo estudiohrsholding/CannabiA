@@ -124,16 +124,14 @@
                         <!-- Columna de Selección -->
                         <div class="space-y-4">
                             <div>
-                                <label for="tpv-socio-select" class="block mb-2 text-sm font-medium">Seleccionar Socio</label>
-                                <select id="tpv-socio-select" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                    <option disabled selected>Seleccione un socio...</option>
-                                </select>
+                                <label for="tpv-socio-input" class="block mb-2 text-sm font-medium">Buscar Socio</label>
+                                <input id="tpv-socio-input" list="tpv-socios-datalist" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Escribe para buscar...">
+                                <datalist id="tpv-socios-datalist"></datalist>
                             </div>
                             <div>
-                                <label for="tpv-articulo-select" class="block mb-2 text-sm font-medium">Seleccionar Artículo</label>
-                                <select id="tpv-articulo-select" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
-                                    <option disabled selected>Seleccione un artículo...</option>
-                                </select>
+                                <label for="tpv-articulo-input" class="block mb-2 text-sm font-medium">Buscar Artículo</label>
+                                <input id="tpv-articulo-input" list="tpv-articulos-datalist" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="Escribe para buscar...">
+                                <datalist id="tpv-articulos-datalist"></datalist>
                             </div>
                             <div>
                                 <label for="tpv-cantidad" class="block mb-2 text-sm font-medium">Cantidad</label>
@@ -208,7 +206,7 @@
                     </div>
                     <div>
                         <label for="article-unidad" class="block mb-2 text-sm font-medium text-slate-300">Unidad Mínima de Dispensa</label>
-                        <input type="number" id="article-unidad" min="1" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                        <input type="number" id="article-unidad" min="0.1" step="0.1" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                     </div>
                     <div>
                         <label for="article-precio" class="block mb-2 text-sm font-medium text-slate-300">Precio por Unidad (€)</label>
@@ -274,6 +272,18 @@
             <div id="socio-details-content" class="overflow-y-auto">
                 <!-- El contenido se cargará aquí dinámicamente -->
                 <p class="text-center p-8">Cargando historial...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Confirmation Modal -->
+    <div id="confirmation-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-lg shadow-xl w-full max-w-sm p-6">
+            <h2 id="confirmation-modal-title" class="text-xl font-bold mb-4">Confirmar Acción</h2>
+            <p id="confirmation-modal-message" class="text-slate-300 mb-6">¿Estás seguro de que quieres continuar?</p>
+            <div class="flex justify-end space-x-4">
+                <button id="confirmation-modal-cancel-btn" class="bg-slate-600 hover:bg-slate-700 py-2 px-4 rounded-lg">Cancelar</button>
+                <button id="confirmation-modal-confirm-btn" class="bg-red-600 hover:bg-red-700 py-2 px-4 rounded-lg">Confirmar</button>
             </div>
         </div>
     </div>
@@ -602,13 +612,68 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <button data-id="${doc.id}" data-estado="${socio.estado}" class="change-status-btn text-blue-400 hover:underline">Cambiar Estado</button>
-                            <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" data-url="${socio.url_foto_id}" class="view-details-btn text-blue-400 hover:underline">Ver Detalles</button>
+                            <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" class="view-details-btn text-blue-400 hover:underline ml-4">Ver Detalles</button>
+                            <button data-id="${doc.id}" class="edit-socio-btn p-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white">✏️</button>
+                            <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" class="delete-socio-btn p-2 bg-red-600 hover:bg-red-700 rounded-lg text-white">🗑️</button>
                         </div>
                     `;
                     sociosList.appendChild(socioCard);
                 });
             });
         }
+
+        async function deleteSocio(socioId, socioNombre) {
+            const sociosCollectionRef = getSociosCollectionRef();
+            if (!sociosCollectionRef) return;
+            try {
+                await deleteDoc(doc(sociosCollectionRef, socioId));
+                showToast(`Socio "${socioNombre}" eliminado correctamente.`);
+            } catch (error) {
+                console.error("Error deleting socio: ", error);
+                showToast("Error al eliminar el socio.", true);
+            }
+        }
+
+        async function handleEditSocio(socioId) {
+            const sociosCollectionRef = getSociosCollectionRef();
+            if (!sociosCollectionRef) return;
+            try {
+                const socioRef = doc(sociosCollectionRef, socioId);
+                const socioSnap = await getDoc(socioRef);
+                if (socioSnap.exists()) {
+                    const data = socioSnap.data();
+                    editingSocioId = socioId;
+
+                    document.getElementById('socio-nombre').value = data.nombre;
+                    document.getElementById('socio-apellido').value = data.apellido;
+
+                    // Reset and update modal UI for editing
+                    addSocioForm.reset(); // First reset to clear validation states if any
+                    document.getElementById('socio-nombre').value = data.nombre;
+                    document.getElementById('socio-apellido').value = data.apellido;
+                    document.getElementById('error-foto').textContent = 'Dejar en blanco para no cambiar la foto.';
+
+
+                    addSocioModalOverlay.querySelector('h2').textContent = 'Editar Socio';
+                    addSocioModalOverlay.querySelector('button[type="submit"]').textContent = 'Guardar Cambios';
+                    addSocioModalOverlay.classList.remove('hidden');
+                } else {
+                    showToast("El socio que intentas editar ya no existe.", true);
+                }
+            } catch (error) {
+                console.error("Error fetching socio for edit: ", error);
+                showToast("Error al cargar los datos del socio.", true);
+            }
+        }
+
+        fabAddSocio.addEventListener('click', () => {
+            editingSocioId = null;
+            addSocioForm.reset();
+            document.getElementById('error-foto').textContent = '';
+            addSocioModalOverlay.querySelector('h2').textContent = 'Añadir Socio';
+            addSocioModalOverlay.querySelector('button[type="submit"]').textContent = 'Guardar';
+            addSocioModalOverlay.classList.remove('hidden');
+        });
 
         addSocioForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -633,7 +698,7 @@
                 document.getElementById('error-apellido').textContent = 'El apellido es obligatorio.';
                 isValid = false;
             }
-            if (!file) {
+            if (!editingSocioId && !file) { // Photo is required only when creating a new member
                 document.getElementById('error-foto').textContent = 'La foto del DNI es obligatoria.';
                 isValid = false;
             }
@@ -655,38 +720,45 @@
                     throw new Error('Error de autenticación. Inténtalo de nuevo.');
                 }
 
-                // Step 1: Create the document in Firestore to get an ID
-                const newSocioRef = doc(sociosCollectionRef);
+                if (editingSocioId) {
+                    // Update existing socio
+                    const socioRef = doc(sociosCollectionRef, editingSocioId);
+                    const socioData = { nombre, apellido };
 
-                const newSocioData = {
-                    nombre,
-                    apellido,
-                    estado: 'Gris',
-                    fecha_ingreso: serverTimestamp(),
-                    fecha_caducidad_pago: null,
-                    url_foto_id: '' // Initialize with empty string
-                };
+                    if (file) {
+                        const optimizedBlob = await optimizeImage(file);
+                        const storageRef = ref(storage, `socios_ids/${editingSocioId}.jpg`);
+                        await uploadBytes(storageRef, optimizedBlob);
+                        socioData.url_foto_id = await getDownloadURL(storageRef);
+                    }
 
-                // Set the initial data
-                await setDoc(newSocioRef, newSocioData);
+                    await updateDoc(socioRef, socioData);
+                    showToast('Socio actualizado correctamente.');
 
-                // Step 2: If there's a file, optimize and upload it
-                if (file) {
+                } else {
+                    // Create new socio
+                    const newSocioRef = doc(sociosCollectionRef);
+                    const newSocioData = {
+                        nombre,
+                        apellido,
+                        estado: 'Gris',
+                        fecha_ingreso: serverTimestamp(),
+                        fecha_caducidad_pago: null,
+                        url_foto_id: ''
+                    };
+                    await setDoc(newSocioRef, newSocioData);
+
                     const optimizedBlob = await optimizeImage(file);
                     const storageRef = ref(storage, `socios_ids/${newSocioRef.id}.jpg`);
                     await uploadBytes(storageRef, optimizedBlob);
-
-                    // Step 3: Get the download URL
                     const downloadURL = await getDownloadURL(storageRef);
 
-                    // Step 4: Update the document with the URL
-                    await updateDoc(newSocioRef, {
-                        url_foto_id: downloadURL
-                    });
+                    await updateDoc(newSocioRef, { url_foto_id: downloadURL });
+                    showToast('Socio añadido correctamente.');
                 }
 
-                showToast('Socio añadido correctamente.');
                 closeSocioModal();
+                editingSocioId = null;
 
             } catch (error) {
                 console.error("Error al guardar el socio:", error);
@@ -702,9 +774,13 @@
         });
 
         sociosList.addEventListener('click', async (e) => {
-            if (e.target.classList.contains('change-status-btn')) {
-                const socioId = e.target.dataset.id;
-                let currentEstado = e.target.dataset.estado;
+            const target = e.target.closest('button');
+            if (!target) return;
+
+            const socioId = target.dataset.id;
+
+            if (target.classList.contains('change-status-btn')) {
+                let currentEstado = target.dataset.estado;
                 let newEstado;
                 let fechaCaducidad = null;
 
@@ -727,12 +803,18 @@
                     estado: newEstado,
                     fecha_caducidad_pago: fechaCaducidad
                 });
-            }
-
-            if (e.target.classList.contains('view-details-btn')) {
-                const socioId = e.target.dataset.id;
-                const socioNombre = e.target.dataset.nombre;
+            } else if (target.classList.contains('view-details-btn')) {
+                const socioNombre = target.dataset.nombre;
                 showPartnerDetails(socioId, socioNombre);
+            } else if (target.classList.contains('edit-socio-btn')) {
+                handleEditSocio(socioId);
+            } else if (target.classList.contains('delete-socio-btn')) {
+                const socioNombre = target.dataset.nombre;
+                showConfirmationModal(
+                    'Eliminar Socio',
+                    `¿Estás seguro de que quieres eliminar a ${socioNombre}? Se eliminarán todos sus datos.`,
+                    () => deleteSocio(socioId, socioNombre)
+                );
             }
         });
 
@@ -791,8 +873,49 @@
         const loadStockForm = document.getElementById('load-stock-form');
         const cancelLoadStockBtn = document.getElementById('cancel-load-stock');
         let currentArticleForStockLoad = null;
+        let editingArticleId = null;
+        let editingSocioId = null;
+
+        // --- Confirmation Modal Logic ---
+        const confirmationModalOverlay = document.getElementById('confirmation-modal-overlay');
+        const confirmationModalTitle = document.getElementById('confirmation-modal-title');
+        const confirmationModalMessage = document.getElementById('confirmation-modal-message');
+        const confirmationModalConfirmBtn = document.getElementById('confirmation-modal-confirm-btn');
+        const confirmationModalCancelBtn = document.getElementById('confirmation-modal-cancel-btn');
+        let confirmationCallback = null;
+
+        function showConfirmationModal(title, message, onConfirm) {
+            confirmationModalTitle.textContent = title;
+            confirmationModalMessage.textContent = message;
+            confirmationCallback = onConfirm;
+            confirmationModalOverlay.classList.remove('hidden');
+        }
+
+        function closeConfirmationModal() {
+            confirmationModalOverlay.classList.add('hidden');
+            confirmationCallback = null;
+        }
+
+        confirmationModalConfirmBtn.addEventListener('click', () => {
+            if (confirmationCallback) {
+                confirmationCallback();
+            }
+            closeConfirmationModal();
+        });
+
+        confirmationModalCancelBtn.addEventListener('click', closeConfirmationModal);
+        confirmationModalOverlay.addEventListener('click', (e) => {
+            if (e.target === confirmationModalOverlay) {
+                closeConfirmationModal();
+            }
+        });
+
 
         fabAddArticulo.addEventListener('click', () => {
+            editingArticleId = null;
+            formArticulo.reset();
+            addArticuloModalOverlay.querySelector('h2').textContent = 'Añadir Artículo';
+            formArticulo.querySelector('button[type="submit"]').textContent = 'Añadir Artículo';
             addArticuloModalOverlay.classList.remove('hidden');
         });
 
@@ -821,12 +944,60 @@
         }
 
         listaArticulosContainer.addEventListener('click', (e) => {
-            if (e.target.classList.contains('load-stock-btn')) {
-                const articleId = e.target.dataset.id;
-                const articleName = e.target.dataset.nombre;
+            const target = e.target.closest('button');
+            if (!target) return;
+
+            const articleElement = target.closest('.grid');
+            const articleId = articleElement.dataset.id;
+            const articleName = articleElement.dataset.nombre;
+
+            if (target.classList.contains('load-stock-btn')) {
                 openLoadStockModal(articleId, articleName);
+            } else if (target.classList.contains('edit-article-btn')) {
+                handleEditArticle(articleId);
+            } else if (target.classList.contains('delete-article-btn')) {
+                showConfirmationModal(
+                    'Eliminar Artículo',
+                    `¿Estás seguro de que quieres eliminar "${articleName}"? Esta acción no se puede deshacer.`,
+                    () => deleteArticle(articleId, articleName)
+                );
             }
         });
+
+        async function deleteArticle(articleId, articleName) {
+            try {
+                await deleteDoc(doc(db, "articulos", articleId));
+                showToast(`Artículo "${articleName}" eliminado correctamente.`);
+            } catch (error) {
+                console.error("Error deleting article: ", error);
+                showToast("Error al eliminar el artículo.", true);
+            }
+        }
+
+        async function handleEditArticle(articleId) {
+            try {
+                const articleRef = doc(db, "articulos", articleId);
+                const articleSnap = await getDoc(articleRef);
+                if (articleSnap.exists()) {
+                    const data = articleSnap.data();
+                    editingArticleId = articleId;
+
+                    document.getElementById('article-nombre').value = data.nombre;
+                    document.getElementById('article-categoria').value = data.categoria;
+                    document.getElementById('article-unidad').value = data.unidadMinimaVenta;
+                    document.getElementById('article-precio').value = data.precioPorUnidad;
+
+                    addArticuloModalOverlay.querySelector('h2').textContent = 'Editar Artículo';
+                    formArticulo.querySelector('button[type="submit"]').textContent = 'Guardar Cambios';
+                    addArticuloModalOverlay.classList.remove('hidden');
+                } else {
+                    showToast("El artículo que intentas editar ya no existe.", true);
+                }
+            } catch (error) {
+                console.error("Error fetching article for edit: ", error);
+                showToast("Error al cargar los datos del artículo.", true);
+            }
+        }
 
         cancelLoadStockBtn.addEventListener('click', closeLoadStockModal);
         loadStockModalOverlay.addEventListener('click', (e) => {
@@ -926,8 +1097,9 @@
 
                     articulosPorCategoria[category].forEach(article => {
                         const articleElement = document.createElement('div');
-                        articleElement.className = 'grid grid-cols-1 sm:grid-cols-4 items-center gap-4 p-2 rounded-md hover:bg-slate-700/50';
+                        articleElement.className = 'grid grid-cols-1 sm:grid-cols-5 items-center gap-4 p-2 rounded-md hover:bg-slate-700/50';
                         articleElement.dataset.id = article.id;
+                        articleElement.dataset.nombre = article.nombre;
 
                         const precio = article.precioPorUnidad || 0;
                         const stock = article.stock || 0;
@@ -938,10 +1110,14 @@
                                 <p class="text-xs text-slate-400">Categoría: ${article.categoria} | Precio: ${precio.toFixed(2)}€</p>
                             </div>
                             <p>Stock: <span class="font-bold">${stock}</span></p>
-                            <div class="sm:col-span-1 sm:text-right">
-                                <button data-id="${article.id}" data-nombre="${article.nombre}" class="load-stock-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
-                                    Cargar Stock
+                            <div class="sm:col-span-1">
+                                <button class="load-stock-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg w-full">
+                                    Cargar
                                 </button>
+                            </div>
+                            <div class="sm:col-span-1 flex space-x-2">
+                                 <button class="edit-article-btn p-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg">✏️</button>
+                                 <button class="delete-article-btn p-2 bg-red-600 hover:bg-red-700 rounded-lg">🗑️</button>
                             </div>
                         `;
                         itemsContainer.appendChild(articleElement);
@@ -965,28 +1141,41 @@
                 return;
             }
 
+            const articleData = {
+                nombre,
+                categoria,
+                unidadMinimaVenta,
+                precioPorUnidad,
+            };
+
             try {
-                await addDoc(collection(db, "articulos"), {
-                    nombre,
-                    categoria,
-                    unidadMinimaVenta,
-                    precioPorUnidad,
-                    stock: 0,
-                    createdAt: serverTimestamp()
-                });
-                showToast(`Artículo "${nombre}" añadido con éxito.`);
+                if (editingArticleId) {
+                    // Update existing article
+                    const articleRef = doc(db, "articulos", editingArticleId);
+                    await updateDoc(articleRef, articleData);
+                    showToast(`Artículo "${nombre}" actualizado con éxito.`);
+                } else {
+                    // Add new article
+                    articleData.stock = 0;
+                    articleData.createdAt = serverTimestamp();
+                    await addDoc(collection(db, "articulos"), articleData);
+                    showToast(`Artículo "${nombre}" añadido con éxito.`);
+                }
                 formArticulo.reset();
                 addArticuloModalOverlay.classList.add('hidden');
+                editingArticleId = null;
             } catch (error) {
-                console.error("Error adding article: ", error);
-                showToast("Hubo un error al añadir el artículo.", true);
+                console.error("Error saving article: ", error);
+                showToast("Hubo un error al guardar el artículo.", true);
             }
         });
 
 
         // --- MÓDULO DE TPV ---
-        const tpvSocioSelect = document.getElementById('tpv-socio-select');
-        const tpvArticuloSelect = document.getElementById('tpv-articulo-select');
+        const tpvSocioInput = document.getElementById('tpv-socio-input');
+        const tpvArticuloInput = document.getElementById('tpv-articulo-input');
+        const tpvSociosDatalist = document.getElementById('tpv-socios-datalist');
+        const tpvArticulosDatalist = document.getElementById('tpv-articulos-datalist');
         const tpvCantidadInput = document.getElementById('tpv-cantidad');
         const resumenSocio = document.getElementById('resumen-socio');
         const resumenArticulo = document.getElementById('resumen-articulo');
@@ -994,79 +1183,63 @@
         const resumenTotal = document.getElementById('resumen-total');
         const realizarDispensaBtn = document.getElementById('realizar-dispensa-btn');
 
+        let sociosMap = new Map();
+        let articulosMap = new Map();
+
         function listenToSociosForTPV() {
             const sociosCollectionRef = getSociosCollectionRef();
             if (!sociosCollectionRef) return;
 
             const q = query(sociosCollectionRef, orderBy("apellido", "asc"));
             onSnapshot(q, (snapshot) => {
-                const currentSelection = tpvSocioSelect.value;
-                tpvSocioSelect.innerHTML = '<option disabled selected value="">Seleccione un socio...</option>';
+                sociosMap.clear();
+                tpvSociosDatalist.innerHTML = '';
                 snapshot.forEach(doc => {
                     const socio = doc.data();
+                    const nombreCompleto = `${socio.nombre} ${socio.apellido}`;
+                    sociosMap.set(nombreCompleto, doc.id);
                     const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = `${socio.nombre} ${socio.apellido}`;
-                    tpvSocioSelect.appendChild(option);
+                    option.value = nombreCompleto;
+                    tpvSociosDatalist.appendChild(option);
                 });
-                if (currentSelection) {
-                    tpvSocioSelect.value = currentSelection;
-                }
             });
         }
 
         function listenToArticlesForTPV() {
             const q = query(collection(db, "articulos"), orderBy("nombre"));
             onSnapshot(q, (snapshot) => {
-                const currentSelection = tpvArticuloSelect.value;
-                tpvArticuloSelect.innerHTML = '<option disabled selected value="">Seleccione un artículo...</option>';
+                articulosMap.clear();
+                tpvArticulosDatalist.innerHTML = '';
                 snapshot.forEach(doc => {
                     const article = doc.data();
+                    articulosMap.set(article.nombre, { id: doc.id, precio: article.precioPorUnidad || 0 });
                     const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = article.nombre;
-                    option.dataset.precio = article.precioPorUnidad || 0;
-                    tpvArticuloSelect.appendChild(option);
+                    option.value = article.nombre;
+                    tpvArticulosDatalist.appendChild(option);
                 });
-                if (currentSelection) {
-                    tpvArticuloSelect.value = currentSelection;
-                }
             });
         }
 
         function actualizarResumenTPV() {
-            const socioId = tpvSocioSelect.value;
-            const articuloId = tpvArticuloSelect.value;
-            const cantidad = parseInt(tpvCantidadInput.value, 10);
+            const socioNombre = tpvSocioInput.value;
+            const articuloNombre = tpvArticuloInput.value;
+            const cantidad = parseFloat(tpvCantidadInput.value);
 
-            const isSocioValid = socioId && socioId !== "";
-            const isArticuloValid = articuloId && articuloId !== "";
+            const socioId = sociosMap.get(socioNombre);
+            const articuloData = articulosMap.get(articuloNombre);
+
+            const isSocioValid = socioId;
+            const isArticuloValid = articuloData;
             const isCantidadValid = !isNaN(cantidad) && cantidad > 0;
 
-            if (isSocioValid) {
-                resumenSocio.textContent = tpvSocioSelect.options[tpvSocioSelect.selectedIndex].text;
-            } else {
-                resumenSocio.textContent = '--';
-            }
-
-            if (isArticuloValid) {
-                resumenArticulo.textContent = tpvArticuloSelect.options[tpvArticuloSelect.selectedIndex].text;
-            } else {
-                resumenArticulo.textContent = '--';
-            }
-
-            if (isCantidadValid) {
-                resumenCantidad.textContent = cantidad;
-            } else {
-                resumenCantidad.textContent = '--';
-            }
+            resumenSocio.textContent = isSocioValid ? socioNombre : '--';
+            resumenArticulo.textContent = isArticuloValid ? articuloNombre : '--';
+            resumenCantidad.textContent = isCantidadValid ? cantidad : '--';
 
             const allValid = isSocioValid && isArticuloValid && isCantidadValid;
 
             if (allValid) {
-                const selectedArticuloOption = tpvArticuloSelect.options[tpvArticuloSelect.selectedIndex];
-                const precioUnitario = parseFloat(selectedArticuloOption.dataset.precio || 0);
-                const total = cantidad * precioUnitario;
+                const total = cantidad * articuloData.precio;
                 resumenTotal.textContent = `${total.toFixed(2)} €`;
                 realizarDispensaBtn.disabled = false;
             } else {
@@ -1075,19 +1248,19 @@
             }
         }
 
-        tpvSocioSelect.addEventListener('change', actualizarResumenTPV);
-        tpvArticuloSelect.addEventListener('change', actualizarResumenTPV);
+        tpvSocioInput.addEventListener('input', actualizarResumenTPV);
+        tpvArticuloInput.addEventListener('input', actualizarResumenTPV);
         tpvCantidadInput.addEventListener('input', actualizarResumenTPV);
 
         async function procesarDispensa() {
-            const idSocioSeleccionado = tpvSocioSelect.value;
-            const idArticuloSeleccionado = tpvArticuloSelect.value;
-            const cantidadDispensada = parseInt(tpvCantidadInput.value, 10);
+            const socioNombre = tpvSocioInput.value;
+            const articuloNombre = tpvArticuloInput.value;
+            const cantidadDispensada = parseFloat(tpvCantidadInput.value);
 
-            const nombreSocio = tpvSocioSelect.options[tpvSocioSelect.selectedIndex].text;
-            const selectedArticuloOption = tpvArticuloSelect.options[tpvArticuloSelect.selectedIndex];
-            const nombreArticulo = selectedArticuloOption.text;
-            const precioUnitario = parseFloat(selectedArticuloOption.dataset.precio || 0);
+            const idSocioSeleccionado = sociosMap.get(socioNombre);
+            const articuloData = articulosMap.get(articuloNombre);
+            const idArticuloSeleccionado = articuloData.id;
+            const precioUnitario = articuloData.precio;
             const aporteTotalCalculado = cantidadDispensada * precioUnitario;
 
             realizarDispensaBtn.disabled = true;
@@ -1129,8 +1302,8 @@
                     transaction.set(dispensaRef, {
                         idSocio: idSocioSeleccionado,
                         idArticulo: idArticuloSeleccionado,
-                        nombreArticulo: nombreArticulo,
-                        nombreSocio: nombreSocio,
+                        nombreArticulo: articuloNombre,
+                        nombreSocio: socioNombre,
                         cantidad: cantidadDispensada,
                         precioTotal: aporteTotalCalculado,
                         fecha: serverTimestamp()
@@ -1140,15 +1313,15 @@
                     const historialRef = doc(collection(db, "historial"));
                     transaction.set(historialRef, {
                         tipo: 'dispensa',
-                        descripcion: `Dispensa de ${cantidadDispensada} uds. de "${nombreArticulo}" a "${nombreSocio}"`,
+                        descripcion: `Dispensa de ${cantidadDispensada} uds. de "${articuloNombre}" a "${socioNombre}"`,
                         fecha: serverTimestamp()
                     });
                 });
 
                 showToast("¡Dispensa realizada con éxito!");
                 // Resetear formulario TPV
-                tpvSocioSelect.value = '';
-                tpvArticuloSelect.value = '';
+                tpvSocioInput.value = '';
+                tpvArticuloInput.value = '';
                 tpvCantidadInput.value = '';
                 actualizarResumenTPV();
 
