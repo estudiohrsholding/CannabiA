@@ -272,17 +272,20 @@
     </div>
 
     <!-- Modal de Detalles del Socio -->
-    <div id="socio-details-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4">
-        <div class="bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-2xl z-50 max-h-[90vh] flex flex-col">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-700 pb-3">
-                <h2 id="socio-details-modal-title" class="text-2xl font-bold">Detalles del Socio</h2>
-                <button id="close-socio-details-modal" class="text-slate-400 hover:text-white">
+    <div id="member-details-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4">
+        <div class="bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-md z-50">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modal-member-name" class="text-2xl font-bold">Detalles del Socio</h2>
+                <button id="close-member-details-modal" class="text-slate-400 hover:text-white">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-            <div id="socio-details-content" class="overflow-y-auto">
-                <!-- El contenido se cargará aquí dinámicamente -->
-                <p class="text-center p-8">Cargando historial...</p>
+            <div class="flex flex-col items-center">
+                <img id="modal-member-photo" src="" alt="Foto del ID" class="w-48 h-48 object-cover rounded-lg mb-4">
+                <div id="modal-countdown-container" class="w-full text-center">
+                    <h3 class="text-lg font-semibold mb-2">La membresía caduca en:</h3>
+                    <p id="modal-countdown" class="text-2xl font-mono bg-slate-900 p-2 rounded-lg">--:--:--:--</p>
+                </div>
             </div>
         </div>
     </div>
@@ -503,57 +506,87 @@
         });
 
 
-        async function showPartnerDetails(socioId, socioNombre) {
-            socioDetailsModalTitle.textContent = `Historial de ${socioNombre}`;
-            socioDetailsModalOverlay.classList.remove('hidden');
-            socioDetailsContent.innerHTML = '<p class="text-center p-8">Cargando historial...</p>';
+        const memberDetailsModal = document.getElementById('member-details-modal');
+        const modalMemberName = document.getElementById('modal-member-name');
+        const modalMemberPhoto = document.getElementById('modal-member-photo');
+        const modalCountdown = document.getElementById('modal-countdown');
+        const modalCountdownContainer = document.getElementById('modal-countdown-container');
+        const closeMemberDetailsModalBtn = document.getElementById('close-member-details-modal');
+        let countdownInterval = null;
+
+        async function showMemberDetails(socioId) {
+            // Clear previous interval if it exists
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+
+            const sociosCollectionRef = getSociosCollectionRef();
+            if (!sociosCollectionRef) return;
 
             try {
-                const dispensasRef = collection(db, "dispensas");
-                const q = query(dispensasRef, where("idSocio", "==", socioId), orderBy("fecha", "desc"));
-                const querySnapshot = await getDocs(q);
+                const socioRef = doc(sociosCollectionRef, socioId);
+                const socioSnap = await getDoc(socioRef);
 
-                if (querySnapshot.empty) {
-                    socioDetailsContent.innerHTML = '<p class="text-center p-8 text-slate-400">Este socio no tiene dispensas registradas.</p>';
+                if (!socioSnap.exists()) {
+                    showToast("Este socio no existe.", true);
                     return;
                 }
 
-                let html = '<div class="space-y-3">';
-                querySnapshot.forEach(doc => {
-                    const dispensa = doc.data();
-                    const fecha = formatFirebaseTimestamp(dispensa.fecha);
-                    html += `
-                        <div class="bg-slate-700 p-3 rounded-lg flex justify-between items-center">
-                            <div>
-                                <p class="font-semibold">${dispensa.nombreArticulo}</p>
-                                <p class="text-sm text-slate-400">${fecha}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-bold text-green-400">${dispensa.precioTotal.toFixed(2)} €</p>
-                                <p class="text-sm text-slate-300">Cantidad: ${dispensa.cantidad}</p>
-                            </div>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                socioDetailsContent.innerHTML = html;
+                const socio = socioSnap.data();
+                modalMemberName.textContent = `${socio.nombre} ${socio.apellido}`;
+                modalMemberPhoto.src = socio.url_foto_id || 'https://via.placeholder.com/150';
+
+                // Countdown logic
+                if (socio.membershipActivationTimestamp) {
+                    modalCountdownContainer.classList.remove('hidden');
+                    const activationTime = socio.membershipActivationTimestamp.toDate();
+                    const expirationTime = new Date(activationTime.getTime());
+                    expirationTime.setDate(expirationTime.getDate() + 365);
+
+                    countdownInterval = setInterval(() => {
+                        const now = new Date().getTime();
+                        const distance = expirationTime - now;
+
+                        if (distance < 0) {
+                            clearInterval(countdownInterval);
+                            modalCountdown.textContent = "Expirado";
+                            return;
+                        }
+
+                        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                        modalCountdown.textContent = `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                    }, 1000);
+
+                } else {
+                    modalCountdownContainer.classList.add('hidden');
+                    modalCountdown.textContent = "Membresía no activa";
+                }
+
+                memberDetailsModal.classList.remove('hidden');
 
             } catch (error) {
-                console.error("Error al obtener el historial del socio:", error);
-                socioDetailsContent.innerHTML = '<p class="text-center p-8 text-red-500">No se pudo cargar el historial. Inténtalo de nuevo.</p>';
-                showToast("Error al cargar el historial.", true);
+                console.error("Error fetching member details:", error);
+                showToast("Error al cargar los detalles del socio.", true);
             }
         }
 
-        function closeSocioDetailsModal() {
-            socioDetailsModalOverlay.classList.add('hidden');
-            socioDetailsContent.innerHTML = '<p class="text-center p-8">Cargando historial...</p>'; // Reset content
+        function closeMemberDetailsModal() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            memberDetailsModal.classList.add('hidden');
         }
 
-        closeSocioDetailsModalBtn.addEventListener('click', closeSocioDetailsModal);
-        socioDetailsModalOverlay.addEventListener('click', (e) => {
-            if (e.target === socioDetailsModalOverlay) {
-                closeSocioDetailsModal();
+        closeMemberDetailsModalBtn.addEventListener('click', closeMemberDetailsModal);
+        memberDetailsModal.addEventListener('click', (e) => {
+            if (e.target === memberDetailsModal) {
+                closeMemberDetailsModal();
             }
         });
 
@@ -648,7 +681,7 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <button data-id="${doc.id}" data-estado="${socio.estado}" class="change-status-btn text-blue-400 hover:underline">Cambiar Estado</button>
-                            <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" class="view-details-btn text-blue-400 hover:underline ml-4">Ver Detalles</button>
+                            <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" class="view-details-btn text-blue-400 hover:underline ml-4">Ver</button>
                             <button data-id="${doc.id}" class="edit-socio-btn p-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-white">✏️</button>
                             <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" class="delete-socio-btn p-2 bg-red-600 hover:bg-red-700 rounded-lg text-white">🗑️</button>
                         </div>
@@ -824,28 +857,35 @@
                 let newEstado;
                 let fechaCaducidad = null;
 
+                let newEstado;
+                let updatePayload = {};
+
                 if (currentEstado === 'Gris') {
                     newEstado = 'Verde';
                     const futureDate = new Date();
                     futureDate.setDate(futureDate.getDate() + 365);
-                    fechaCaducidad = futureDate;
+                    updatePayload = {
+                        estado: newEstado,
+                        fecha_caducidad_pago: futureDate,
+                        membershipActivationTimestamp: serverTimestamp()
+                    };
                 } else if (currentEstado === 'Verde') {
                     newEstado = 'Rojo';
+                    // Al pasar a 'Rojo' o 'Gris', limpiamos la fecha de caducidad.
+                    // El timestamp de activación se conserva como historial, pero no se usará para el countdown.
+                    updatePayload = { estado: newEstado, fecha_caducidad_pago: null };
                 } else { // Rojo
                     newEstado = 'Gris';
+                    updatePayload = { estado: newEstado, fecha_caducidad_pago: null };
                 }
 
                 const sociosCollectionRef = getSociosCollectionRef();
                 if (!sociosCollectionRef) return;
 
                 const socioRef = doc(sociosCollectionRef, socioId);
-                await updateDoc(socioRef, {
-                    estado: newEstado,
-                    fecha_caducidad_pago: fechaCaducidad
-                });
+                await updateDoc(socioRef, updatePayload);
             } else if (target.classList.contains('view-details-btn')) {
-                const socioNombre = target.dataset.nombre;
-                showPartnerDetails(socioId, socioNombre);
+                showMemberDetails(socioId);
             } else if (target.classList.contains('edit-socio-btn')) {
                 handleEditSocio(socioId);
             } else if (target.classList.contains('delete-socio-btn')) {
