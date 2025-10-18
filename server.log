@@ -1,0 +1,5 @@
+127.0.0.1 - - [18/Oct/2025 05:17:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2025 05:17:02] "GET /src/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2025 05:17:02] "GET /src/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [18/Oct/2025 05:17:03] code 404, message File not found
+127.0.0.1 - - [18/Oct/2025 05:17:03] "GET /firebase-config.json HTTP/1.1" 404 -

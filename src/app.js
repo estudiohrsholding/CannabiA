@@ -50,7 +50,7 @@ async function setupApp() {
                 currentUser = user;
                 loginView.classList.add('hidden');
                 appContainer.classList.remove('hidden');
-                showView('main-menu-view');
+                showView('main-menu-view'); // Ensure main menu is shown
                 // Inicializa Listeners después de la autenticación
                 listenToSocios();
                 listenToHistory();
@@ -150,6 +150,54 @@ const socioDetailsModalTitle = document.getElementById('socio-details-modal-titl
 const socioDetailsContent = document.getElementById('socio-details-content');
 const closeSocioDetailsModalBtn = document.getElementById('close-socio-details-modal');
 
+// --- QR Code Modal Elements & State ---
+const qrCodeModal = document.getElementById('qr-code-modal');
+const qrModalTitle = document.getElementById('qr-modal-title');
+const qrCodeCanvas = document.getElementById('qr-code-canvas');
+const closeQrModalBtn = document.getElementById('close-qr-modal');
+let qrCodeInstance = null; // To hold the QRCode object instance
+
+function showQrCodeModal(socioId, socioNombre) {
+    qrModalTitle.textContent = `Carnet de: ${socioNombre}`;
+
+    // Clear previous QR code
+    qrCodeCanvas.innerHTML = '';
+
+    // Generate the URL for the card page
+    const cardUrl = `${window.location.origin}/card.html?id=${socioId}`;
+
+    // Generate new QR code
+    qrCodeInstance = new QRCode(qrCodeCanvas, {
+        text: cardUrl,
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    qrCodeModal.classList.remove('hidden');
+}
+
+function closeQrCodeModal() {
+    qrCodeModal.classList.add('hidden');
+    // Clear the QR code to free up resources
+    if (qrCodeInstance) {
+        qrCodeInstance.clear();
+        qrCodeCanvas.innerHTML = '';
+        qrCodeInstance = null;
+    }
+}
+
+closeQrModalBtn.addEventListener('click', closeQrCodeModal);
+qrCodeModal.addEventListener('click', (e) => {
+    // Close if clicking on the dark overlay, but not on the modal content itself
+    if (e.target === qrCodeModal) {
+        closeQrCodeModal();
+    }
+});
+
+
 async function showPartnerDetails(socioId, socioNombre) {
     socioDetailsModalTitle.textContent = `Historial de ${socioNombre}`;
     socioDetailsModalOverlay.classList.remove('hidden');
@@ -206,12 +254,12 @@ socioDetailsModalOverlay.addEventListener('click', (e) => {
 
 // FUNCIÓN CRÍTICA CORREGIDA PARA USAR APP ID
 function getSociosCollectionRef() {
-    if (!currentUser || !appId) {
-        console.error("User not logged in or App ID not available");
+    if (!currentUser) {
+        console.error("User not logged in");
         return null;
     }
-    // RUTA COMPLEJA ORIGINAL RECONSTRUIDA CON LA VARIABLE appId global
-    return collection(db, `artifacts/${appId}/users/${currentUser.uid}/socios`);
+    // Path simplificado para apuntar a la colección global de socios
+    return collection(db, "socios");
 }
 // -------------------------------------------
 
@@ -257,14 +305,22 @@ function listenToSocios() {
     const sociosCollectionRef = getSociosCollectionRef();
     if (!sociosCollectionRef) return;
 
-    const q = query(sociosCollectionRef, orderBy("apellido", "asc"));
+    const q = query(sociosCollectionRef); // Remove orderBy to avoid needing an index
     const unsubscribe = onSnapshot(q, (snapshot) => {
         sociosList.innerHTML = '';
         if (snapshot.empty) {
             sociosList.innerHTML = '<tr><td colspan="4" class="py-4 px-6 text-center text-gray-500">No hay socios registrados.</td></tr>';
             return;
         }
-        snapshot.forEach(doc => {
+
+        // Sort documents on the client-side
+        const sociosDocs = snapshot.docs.sort((a, b) => {
+            const apellidoA = a.data().apellido || '';
+            const apellidoB = b.data().apellido || '';
+            return apellidoA.localeCompare(apellidoB);
+        });
+
+        sociosDocs.forEach(doc => {
             const socio = doc.data();
             const hoy = new Date();
             let estadoFinal = socio.estado;
@@ -294,6 +350,7 @@ function listenToSocios() {
                     <td class="py-4 px-6">
                         <button data-id="${doc.id}" data-estado="${socio.estado}" class="change-status-btn text-blue-400 hover:underline">Cambiar Estado</button>
                         <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" data-url="${socio.url_foto_id}" class="view-details-btn text-blue-400 hover:underline ml-4">Ver Detalles</button>
+                        <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" class="view-card-btn text-green-400 hover:underline ml-4">Ver Carnet</button>
                     </td>
                 </tr>
             `;
@@ -426,6 +483,12 @@ sociosList.addEventListener('click', async (e) => {
         const socioId = e.target.dataset.id;
         const socioNombre = e.target.dataset.nombre;
         showPartnerDetails(socioId, socioNombre);
+    }
+
+    if (e.target.classList.contains('view-card-btn')) {
+        const socioId = e.target.dataset.id;
+        const socioNombre = e.target.dataset.nombre;
+        showQrCodeModal(socioId, socioNombre);
     }
 });
 
@@ -671,11 +734,19 @@ function listenToSociosForTPV() {
     const sociosCollectionRef = getSociosCollectionRef();
     if (!sociosCollectionRef) return;
 
-    const q = query(sociosCollectionRef, orderBy("apellido", "asc"));
+    const q = query(sociosCollectionRef); // Remove orderBy to avoid needing an index
     const unsubscribe = onSnapshot(q, (snapshot) => {
         const currentSelection = tpvSocioSelect.value;
         tpvSocioSelect.innerHTML = '<option disabled selected value="">Seleccione un socio...</option>';
-        snapshot.forEach(doc => {
+
+        // Sort documents on the client-side
+        const sociosDocs = snapshot.docs.sort((a, b) => {
+            const apellidoA = a.data().apellido || '';
+            const apellidoB = b.data().apellido || '';
+            return apellidoA.localeCompare(apellidoB);
+        });
+
+        sociosDocs.forEach(doc => {
             const socio = doc.data();
             const option = document.createElement('option');
             option.value = doc.id;

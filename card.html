@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha de Socio - Cannabia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="bg-gray-100">
+
+    <div class="min-h-screen p-4 flex items-center justify-center">
+        <div id="card-container" class="bg-white max-w-md w-full rounded-2xl shadow-xl p-6">
+
+            <!-- Loading Spinner -->
+            <div id="loading-spinner" class="flex justify-center items-center p-8">
+                <svg class="animate-spin rounded-full h-12 w-12 border-t-4 border-green-500" viewBox="0 0 24 24"></svg>
+            </div>
+
+            <!-- Data Container (Hidden until loading) -->
+            <div id="data-container" class="hidden">
+                <img id="member-photo" src="" alt="Foto del Socio" class="w-32 h-32 rounded-full mx-auto border-4 border-white shadow-lg -mt-16">
+
+                <h1 id="member-name" class="text-2xl font-bold text-gray-900 text-center mt-4"></h1>
+
+                <div id="status-badge" class="text-lg font-semibold text-center mt-2 p-2 rounded-full"></div>
+
+                <div class="mt-6 border-t border-gray-200 pt-4">
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-600 font-medium">Caducidad:</span>
+                        <span id="member-expiry" class="text-gray-900 font-bold"></span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-gray-600 font-medium">Nº Socio:</span>
+                        <span id="member-id" class="text-gray-900 font-mono"></span>
+                    </div>
+                </div>
+            </div>
+
+             <!-- Error Container -->
+            <div id="error-container" class="hidden text-center p-8">
+                <h2 class="text-xl font-bold text-red-600">Socio no encontrado</h2>
+                <p class="text-gray-700 mt-2">El ID del socio no es válido o el socio no existe.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="src/card.js"></script>
+</body>
+</html>
