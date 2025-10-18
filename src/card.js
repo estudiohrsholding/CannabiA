@@ -1,11 +1,8 @@
-// Wait for the DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', () => {
+import { db } from './firebase-init.js';
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
-    // Initialize Firebase
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const db = firebase.firestore();
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', async () => {
 
     const loadingSpinner = document.getElementById('loading-spinner');
     const dataContainer = document.getElementById('data-container');
@@ -39,45 +36,44 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Fetch member data from Firestore
-    db.collection('socios').doc(memberId).get()
-        .then((doc) => {
-            if (doc.exists) {
-                const memberData = doc.data();
+    try {
+        const docRef = doc(db, "socios", memberId);
+        const docSnap = await getDoc(docRef);
 
-                // Populate the card with data
-                document.getElementById('member-photo').src = memberData.url_foto_id || 'https://via.placeholder.com/150';
-                document.getElementById('member-name').textContent = `${memberData.nombre} ${memberData.apellido}`;
-                document.getElementById('member-id').textContent = doc.id;
+        if (docSnap.exists()) {
+            const memberData = docSnap.data();
 
-                const expiryDate = memberData.fecha_caducidad_pago ? memberData.fecha_caducidad_pago.toDate() : null;
-                const statusBadge = document.getElementById('status-badge');
+            // Populate the card with data
+            document.getElementById('member-photo').src = memberData.url_foto_id || 'https://via.placeholder.com/150';
+            document.getElementById('member-name').textContent = `${memberData.nombre} ${memberData.apellido}`;
+            document.getElementById('member-id').textContent = docSnap.id;
 
-                if (expiryDate && expiryDate > new Date()) {
-                    statusBadge.textContent = 'Socio Activo';
-                    statusBadge.classList.add('bg-green-100', 'text-green-800');
-                } else {
-                    statusBadge.textContent = 'Socio Caducado';
-                    statusBadge.classList.add('bg-red-100', 'text-red-800');
-                }
+            const expiryDate = memberData.fecha_caducidad_pago ? memberData.fecha_caducidad_pago.toDate() : null;
+            const statusBadge = document.getElementById('status-badge');
 
-                document.getElementById('member-expiry').textContent = formatFirebaseTimestamp(memberData.fecha_caducidad_pago);
-
-                // Show data and hide spinner
-                dataContainer.classList.remove('hidden');
-                loadingSpinner.classList.add('hidden');
-
+            if (expiryDate && expiryDate > new Date()) {
+                statusBadge.textContent = 'Socio Activo';
+                statusBadge.classList.add('bg-green-100', 'text-green-800');
             } else {
-                // Handle case where member is not found
-                console.error("No such document!");
-                loadingSpinner.classList.add('hidden');
-                errorContainer.classList.remove('hidden');
+                statusBadge.textContent = 'Socio Caducado';
+                statusBadge.classList.add('bg-red-100', 'text-red-800');
             }
-        })
-        .catch((error) => {
-            console.error("Error getting document:", error);
+
+            document.getElementById('member-expiry').textContent = formatFirebaseTimestamp(memberData.fecha_caducidad_pago);
+
+            // Show data and hide spinner
+            dataContainer.classList.remove('hidden');
+            loadingSpinner.classList.add('hidden');
+        } else {
+            // Handle case where member is not found
+            console.error("No such document!");
             loadingSpinner.classList.add('hidden');
             errorContainer.classList.remove('hidden');
-            errorContainer.querySelector('p').textContent = `Error al cargar los datos: ${error.message}`;
-        });
+        }
+    } catch (error) {
+        console.error("Error getting document:", error);
+        loadingSpinner.classList.add('hidden');
+        errorContainer.classList.remove('hidden');
+        errorContainer.querySelector('p').textContent = `Error al cargar los datos: ${error.message}`;
+    }
 });

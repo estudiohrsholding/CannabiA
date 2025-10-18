@@ -1,14 +1,12 @@
 // RUTA DEL ARCHIVO: src/app.js
 
-// Importa las funciones que necesitas de los SDKs de Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, orderBy, setDoc, increment, runTransaction, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
+// Importa los servicios de Firebase inicializados
+import app, { auth, db, storage } from './firebase-init.js';
 
-// Declaración de variables globales (serán asignadas dentro de setupApp)
-let app, auth, db, storage;
-let appId = null; // <-- NUEVA VARIABLE GLOBAL PARA EL APP ID
+// Importa las funciones que necesitas de los SDKs de Firebase
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+import { collection, addDoc, onSnapshot, doc, updateDoc, serverTimestamp, query, setDoc, increment, runTransaction, getDoc, where, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-storage.js";
 
 let currentUser = null;
 let activeListeners = [];
@@ -17,31 +15,16 @@ function cleanupListeners() {
     activeListeners = [];
 }
 
-// --- FUNCIÓN DE INICIALIZACIÓN ASÍNCRONA SEGURA (INICIO DE LA APP) ---
-async function setupApp() {
-    // Definimos las variables de vistas localmente (tomadas del HTML)
+// --- FUNCIÓN DE INICIALIZACIÓN DE LA APP ---
+function setupApp() {
     const loadingView = document.getElementById('loading-view');
     const loginView = document.getElementById('login-view');
     const appContainer = document.getElementById('app-container');
 
     try {
-        // 1. Petición SEGURA a la Cloud Function para obtener la config
-        const response = await fetch('/firebase-config.json');
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: No se pudo obtener la configuración.`);
-        }
-        const firebaseConfig = await response.json();
+        console.log("Firebase initialized successfully via module.");
         
-        // ASIGNACIÓN CRÍTICA: Guardar el appId globalmente para Firestore
-        appId = firebaseConfig.appId;
-
-        // 2. Inicializa Firebase con la configuración cargada
-        app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        storage = getStorage(app);
-
-        // 3. Lógica de Autenticación (ÚNICA)
+        // Lógica de Autenticación
         setPersistence(auth, browserLocalPersistence);
         onAuthStateChanged(auth, user => {
             cleanupListeners();
@@ -50,7 +33,7 @@ async function setupApp() {
                 currentUser = user;
                 loginView.classList.add('hidden');
                 appContainer.classList.remove('hidden');
-                showView('main-menu-view'); // Ensure main menu is shown
+                showView('main-menu-view');
                 // Inicializa Listeners después de la autenticación
                 listenToSocios();
                 listenToHistory();
@@ -65,8 +48,8 @@ async function setupApp() {
         });
 
     } catch (error) {
-        console.error("Fallo la inicialización completa de la app:", error);
-        loadingView.innerHTML = '<p class="text-xl text-red-500">Error Crítico: No se pudo cargar la configuración de la aplicación.</p>';
+        console.error("App setup failed:", error);
+        loadingView.innerHTML = '<p class="text-xl text-red-500">Error Crítico: No se pudo inicializar la aplicación.</p>';
     }
 }
 
