@@ -243,8 +243,18 @@
                     <div id="error-apellido" class="text-red-400 text-sm mt-1"></div>
                 </div>
                 <div class="mb-4">
-                    <label for="socio-id-photo" class="block mb-2 text-sm font-medium text-slate-300">Foto del ID</label>
-                    <input type="file" id="socio-id-photo" accept="image/*" class="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" required>
+                    <label class="block mb-2 text-sm font-medium text-slate-300">Foto del ID</label>
+                    <div id="photo-preview-container" class="hidden w-full h-48 bg-slate-700 rounded-lg mb-2 flex items-center justify-center">
+                        <img id="photo-preview" src="" alt="Vista previa de la foto" class="hidden max-h-full max-w-full rounded-lg">
+                        <span id="preview-text" class="text-slate-400">Vista previa</span>
+                    </div>
+                    <button type="button" id="take-photo-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg mb-2">
+                        Tomar Foto
+                    </button>
+                    <div class="text-center">
+                        <a href="#" id="upload-file-link" class="text-sm text-blue-400 hover:underline">o sube un archivo</a>
+                    </div>
+                    <input type="file" id="socio-id-photo" accept="image/*" class="hidden" required>
                     <div id="error-foto" class="text-red-400 text-sm mt-1"></div>
                 </div>
                 <div class="flex justify-end space-x-4 mt-6">
@@ -285,6 +295,31 @@
             <div class="flex justify-end space-x-4">
                 <button id="confirmation-modal-cancel-btn" class="bg-slate-600 hover:bg-slate-700 py-2 px-4 rounded-lg">Cancelar</button>
                 <button id="confirmation-modal-confirm-btn" class="bg-red-600 hover:bg-red-700 py-2 px-4 rounded-lg">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="camera-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-2xl">
+            <h2 class="text-2xl font-bold mb-4">Capturar Foto</h2>
+            <div id="camera-container" class="relative">
+                <video id="camera-feed" class="w-full h-auto rounded-lg bg-slate-900" autoplay playsinline></video>
+                <canvas id="photo-canvas" class="hidden"></canvas>
+                <div id="camera-preview-overlay" class="hidden absolute inset-0 flex items-center justify-center">
+                    <img id="camera-preview" src="" class="max-h-full max-w-full rounded-lg">
+                </div>
+            </div>
+            <div id="camera-error" class="text-red-400 text-center my-2"></div>
+            <div id="camera-controls" class="flex justify-center items-center space-x-4 mt-4">
+                <button id="capture-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full text-lg">Capturar</button>
+            </div>
+            <div id="preview-controls" class="hidden flex justify-center items-center space-x-4 mt-4">
+                <button id="retake-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg">Volver a tomar</button>
+                <button id="use-photo-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Usar esta foto</button>
+            </div>
+            <div class="text-center mt-4">
+                 <button id="close-camera-modal" class="text-slate-400 hover:text-white">Cancelar</button>
             </div>
         </div>
     </div>
@@ -682,7 +717,8 @@
             // Validación
             const nombre = document.getElementById('socio-nombre').value.trim();
             const apellido = document.getElementById('socio-apellido').value.trim();
-            const file = socioIdPhotoInput.files[0];
+            const fileFromInput = socioIdPhotoInput.files[0];
+            const imageFile = capturedImageFile || fileFromInput;
             let isValid = true;
 
             // Limpiar errores previos
@@ -699,7 +735,7 @@
                 document.getElementById('error-apellido').textContent = 'El apellido es obligatorio.';
                 isValid = false;
             }
-            if (!editingSocioId && !file) { // Photo is required only when creating a new member
+            if (!editingSocioId && !imageFile) { // Photo is required only when creating a new member
                 document.getElementById('error-foto').textContent = 'La foto del DNI es obligatoria.';
                 isValid = false;
             }
@@ -726,8 +762,8 @@
                     const socioRef = doc(sociosCollectionRef, editingSocioId);
                     const socioData = { nombre, apellido };
 
-                    if (file) {
-                        const optimizedBlob = await optimizeImage(file);
+                    if (imageFile) {
+                        const optimizedBlob = await optimizeImage(imageFile);
                         const storageRef = ref(storage, `socios_ids/${editingSocioId}.jpg`);
                         await uploadBytes(storageRef, optimizedBlob);
                         socioData.url_foto_id = await getDownloadURL(storageRef);
@@ -749,7 +785,7 @@
                     };
                     await setDoc(newSocioRef, newSocioData);
 
-                    const optimizedBlob = await optimizeImage(file);
+                    const optimizedBlob = await optimizeImage(imageFile);
                     const storageRef = ref(storage, `socios_ids/${newSocioRef.id}.jpg`);
                     await uploadBytes(storageRef, optimizedBlob);
                     const downloadURL = await getDownloadURL(storageRef);
@@ -879,6 +915,126 @@
         let currentArticleForStockLoad = null;
         let editingArticleId = null;
         let editingSocioId = null;
+        let capturedImageFile = null;
+        let mediaStream = null;
+
+        const takePhotoBtn = document.getElementById('take-photo-btn');
+        const cameraModal = document.getElementById('camera-modal');
+        const cameraFeed = document.getElementById('camera-feed');
+        const closeCameraModalBtn = document.getElementById('close-camera-modal');
+        const cameraError = document.getElementById('camera-error');
+
+        async function startCamera() {
+            cameraError.textContent = '';
+            try {
+                if (mediaStream) {
+                    mediaStream.getTracks().forEach(track => track.stop());
+                }
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                cameraFeed.srcObject = mediaStream;
+                cameraModal.classList.remove('hidden');
+            } catch (err) {
+                console.error("Error accessing camera:", err);
+                let message = "No se pudo acceder a la cámara.";
+                if (err.name === "NotAllowedError") {
+                    message = "Permiso de cámara denegado. Por favor, actívalo en los ajustes de tu navegador.";
+                } else if (err.name === "NotFoundError") {
+                    message = "No se encontró ninguna cámara en este dispositivo.";
+                }
+                cameraError.textContent = message;
+                cameraModal.classList.remove('hidden'); // Show modal to display the error
+            }
+        }
+
+        function stopCamera() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+            cameraModal.classList.add('hidden');
+        }
+
+        takePhotoBtn.addEventListener('click', startCamera);
+        closeCameraModalBtn.addEventListener('click', stopCamera);
+
+        const photoCanvas = document.getElementById('photo-canvas');
+        const captureBtn = document.getElementById('capture-btn');
+        const cameraControls = document.getElementById('camera-controls');
+        const previewControls = document.getElementById('preview-controls');
+        const retakeBtn = document.getElementById('retake-btn');
+        const usePhotoBtn = document.getElementById('use-photo-btn');
+        const cameraPreview = document.getElementById('camera-preview');
+        const cameraPreviewOverlay = document.getElementById('camera-preview-overlay');
+
+
+        captureBtn.addEventListener('click', () => {
+            const context = photoCanvas.getContext('2d');
+            photoCanvas.width = cameraFeed.videoWidth;
+            photoCanvas.height = cameraFeed.videoHeight;
+            context.drawImage(cameraFeed, 0, 0, photoCanvas.width, photoCanvas.height);
+
+            cameraPreview.src = photoCanvas.toDataURL('image/jpeg');
+
+            // Show preview, hide feed
+            cameraFeed.classList.add('hidden');
+            cameraPreviewOverlay.classList.remove('hidden');
+
+            // Toggle controls
+            cameraControls.classList.add('hidden');
+            previewControls.classList.remove('hidden');
+        });
+
+        retakeBtn.addEventListener('click', () => {
+            // Hide preview, show feed
+            cameraFeed.classList.remove('hidden');
+            cameraPreviewOverlay.classList.add('hidden');
+
+            // Toggle controls
+            previewControls.classList.add('hidden');
+            cameraControls.classList.remove('hidden');
+        });
+
+        usePhotoBtn.addEventListener('click', () => {
+            photoCanvas.toBlob((blob) => {
+                capturedImageFile = new File([blob], 'id_photo.jpg', { type: 'image/jpeg' });
+
+                // Display in the form's preview area
+                photoPreview.src = URL.createObjectURL(capturedImageFile);
+                photoPreview.classList.remove('hidden');
+                photoPreviewContainer.classList.remove('hidden');
+                previewText.classList.add('hidden');
+
+                // Clear the file input
+                socioIdPhotoInput.value = '';
+
+                stopCamera();
+            }, 'image/jpeg', 0.9);
+        });
+
+        const uploadFileLink = document.getElementById('upload-file-link');
+        const photoPreviewContainer = document.getElementById('photo-preview-container');
+        const photoPreview = document.getElementById('photo-preview');
+        const previewText = document.getElementById('preview-text');
+
+        uploadFileLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            socioIdPhotoInput.click();
+        });
+
+        socioIdPhotoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    photoPreview.src = event.target.result;
+                    photoPreview.classList.remove('hidden');
+                    photoPreviewContainer.classList.remove('hidden');
+                    previewText.classList.add('hidden');
+                    capturedImageFile = null; // Clear any previously captured photo
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
         // --- Confirmation Modal Logic ---
         const confirmationModalOverlay = document.getElementById('confirmation-modal-overlay');
