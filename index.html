@@ -15,23 +15,23 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body class="min-h-screen flex flex-col items-center justify-center bg-gray-900 p-4">
+<body class="min-h-screen flex flex-col items-center justify-center bg-slate-900 p-4">
 
     <div id="loading-view" class="flex items-center justify-center h-screen">
         <p class="text-xl">Cargando aplicación...</p>
     </div>
 
     <div id="login-view" class="hidden w-full max-w-sm mx-auto mt-20">
-        <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
+        <div class="bg-slate-800 p-8 rounded-lg shadow-lg">
             <h2 class="text-2xl font-bold mb-6 text-center">Iniciar Sesión</h2>
             <form id="login-form">
                 <div class="mb-4">
-                    <label for="login-email" class="block mb-2 text-sm font-medium text-gray-300">Email</label>
-                    <input type="email" id="login-email" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    <label for="login-email" class="block mb-2 text-sm font-medium text-slate-300">Email</label>
+                    <input type="email" id="login-email" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                 </div>
                 <div class="mb-6">
-                    <label for="login-password" class="block mb-2 text-sm font-medium text-gray-300">Contraseña</label>
-                    <input type="password" id="login-password" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    <label for="login-password" class="block mb-2 text-sm font-medium text-slate-300">Contraseña</label>
+                    <input type="password" id="login-password" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                 </div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Entrar</button>
                 <p id="login-error" class="text-red-500 text-center mt-4"></p>
@@ -39,15 +39,15 @@
         </div>
     </div>
     <div id="load-stock-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
-        <div id="load-stock-modal-content" class="relative bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md z-50">
+        <div id="load-stock-modal-content" class="relative bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-md z-50">
             <h2 id="load-stock-modal-title" class="text-2xl font-bold mb-4">Cargando stock para: </h2>
             <form id="load-stock-form">
                 <div class="mb-4">
-                    <label for="stock-cantidad-input" class="block mb-2 text-sm font-medium text-gray-300">Cantidad a Cargar</label>
-                    <input type="number" id="stock-cantidad-input" min="1" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    <label for="stock-cantidad-input" class="block mb-2 text-sm font-medium text-slate-300">Cantidad a Cargar</label>
+                    <input type="number" id="stock-cantidad-input" min="1" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
                 </div>
                 <div class="flex justify-end space-x-4 mt-6">
-                    <button type="button" id="cancel-load-stock" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded-lg">Cancelar</button>
+                    <button type="button" id="cancel-load-stock" class="bg-slate-600 hover:bg-slate-700 py-2 px-4 rounded-lg">Cancelar</button>
                     <button type="submit" id="confirm-load-stock-btn" class="bg-blue-600 hover:bg-blue-700 py-2 px-4 rounded-lg">Confirmar Carga</button>
                 </div>
             </form>
@@ -56,18 +56,18 @@
 
     <div id="app-container" class="w-full max-w-7xl mx-auto">
         <div id="view-id-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-            <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
+            <div class="bg-slate-800 p-8 rounded-lg shadow-lg w-full max-w-md">
                 <h2 class="text-2xl font-bold mb-4">Foto del ID</h2>
                 <img id="id-photo-container" src="" alt="Foto del ID" class="rounded-lg max-h-96 mx-auto"/>
                 <div class="flex justify-end mt-4">
-                    <button type="button" id="close-view-id-modal" class="bg-gray-600 hover:bg-gray-700 py-2 px-4 rounded">Cerrar</button>
+                    <button type="button" id="close-view-id-modal" class="bg-slate-600 hover:bg-slate-700 py-2 px-4 rounded">Cerrar</button>
                 </div>
             </div>
         </div>
         <header class="flex justify-between items-center mb-6">
             <h1 id="view-title" class="text-3xl font-bold">Menú Principal</h1>
             <div>
-                <button id="back-to-menu" class="hidden bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg mr-4">← Volver</button>
+                <button id="back-to-menu" class="hidden bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-4 rounded-lg mr-4">← Volver</button>
                 <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Cerrar Sesión</button>
             </div>
         </header>
@@ -75,23 +75,23 @@
         <main>
             <section id="main-menu-view" class="view">
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 text-center">
-                <div data-view="socios" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                <div data-view="socios" class="menu-item bg-slate-800 p-6 rounded-lg hover:bg-slate-700 cursor-pointer transition-transform transform hover:-translate-y-1">
                         <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         <h2 class="text-xl font-semibold">Socios</h2>
                     </div>
-                    <div data-view="articulos-section" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                    <div data-view="articulos-section" class="menu-item bg-slate-800 p-6 rounded-lg hover:bg-slate-700 cursor-pointer transition-transform transform hover:-translate-y-1">
                         <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
                         <h2 class="text-xl font-semibold">Artículos</h2>
                     </div>
-                    <div data-view="tpv-section" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                    <div data-view="tpv-section" class="menu-item bg-slate-800 p-6 rounded-lg hover:bg-slate-700 cursor-pointer transition-transform transform hover:-translate-y-1">
                         <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                         <h2 class="text-xl font-semibold">TPV</h2>
                     </div>
-                    <div data-view="stats-view" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                    <div data-view="stats-view" class="menu-item bg-slate-800 p-6 rounded-lg hover:bg-slate-700 cursor-pointer transition-transform transform hover:-translate-y-1">
                         <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                         <h2 class="text-xl font-semibold">Estadísticas</h2>
                     </div>
-                    <div data-view="historial-section" class="menu-item bg-gray-800 p-6 rounded-lg hover:bg-gray-700 cursor-pointer transition-colors">
+                    <div data-view="historial-section" class="menu-item bg-slate-800 p-6 rounded-lg hover:bg-slate-700 cursor-pointer transition-transform transform hover:-translate-y-1">
                         <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         <h2 class="text-xl font-semibold">Historial</h2>
                     </div>
@@ -101,58 +101,17 @@
             <section id="socios" class="view hidden">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-bold">Socios</h2>
-                    <button id="show-add-socio-modal" class="bg-blue-600 text-white hover:bg-blue-700 py-2 px-4 rounded-lg shadow-md transition-transform transform hover:scale-105 flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        Añadir Socio
-                    </button>
                 </div>
-                <div class="overflow-x-auto relative shadow-md sm:rounded-lg">
-                    <table class="w-full text-sm text-left text-gray-400">
-                        <thead class="text-xs text-gray-400 uppercase bg-gray-700">
-                            <tr>
-                                <th scope="col" class="py-3 px-6">Nombre</th>
-                                <th scope="col" class="py-3 px-6">Apellido</th>
-                                <th scope="col" class="py-3 px-6">Estado</th>
-                                <th scope="col" class="py-3 px-6">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="socios-list">
-                            <!-- Los socios se renderizarán aquí -->
-                        </tbody>
-                    </table>
+                <input type="search" id="search-socios" placeholder="Buscar socio por nombre..." class="w-full p-2 mb-4 bg-slate-700 rounded-lg border border-slate-600">
+                <div id="socios-list" class="space-y-2">
+                    <!-- Los socios se renderizarán aquí como tarjetas -->
                 </div>
             </section>
             
             <section id="articulos-section" class="view hidden space-y-8">
                 <div>
-                    <h2 class="text-2xl font-bold mb-4">Añadir Nuevo Artículo</h2>
-                    <form id="form-articulo" class="bg-gray-800 p-6 rounded-lg">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label for="article-nombre" class="block mb-2 text-sm font-medium text-gray-300">Nombre</label>
-                                <input type="text" id="article-nombre" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                            </div>
-                            <div>
-                                <label for="article-categoria" class="block mb-2 text-sm font-medium text-gray-300">Categoría</label>
-                                <input list="categorias-datalist" type="text" id="article-categoria" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                                <datalist id="categorias-datalist"></datalist>
-                            </div>
-                            <div>
-                                <label for="article-unidad" class="block mb-2 text-sm font-medium text-gray-300">Unidad Mínima de Dispensa</label>
-                                <input type="number" id="article-unidad" min="1" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                            </div>
-                            <div>
-                                <label for="article-precio" class="block mb-2 text-sm font-medium text-gray-300">Precio por Unidad (€)</label>
-                                <input type="number" id="article-precio" min="0" step="0.01" class="bg-gray-700 border border-gray-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
-                            </div>
-                        </div>
-                        <div class="mt-6 text-right">
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Artículo</button>
-                        </div>
-                    </form>
-                </div>
-                <div>
                     <h2 class="text-2xl font-bold mb-4">Inventario</h2>
+                    <input type="search" id="search-articulos" placeholder="Buscar artículo por nombre..." class="w-full p-2 mb-4 bg-slate-700 rounded-lg border border-slate-600">
                     <div id="lista-articulos-container" class="space-y-6">
                         <!-- Los artículos se renderizarán aquí -->
                     </div>
@@ -221,9 +180,51 @@
         </main>
     </div>
     
+    <!-- FABs -->
+    <button id="fab-add-socio" class="hidden fixed bottom-8 right-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full p-4 shadow-lg z-30 text-2xl w-16 h-16 flex items-center justify-center">+</button>
+    <button id="fab-add-articulo" class="hidden fixed bottom-8 right-8 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full p-4 shadow-lg z-30 text-2xl w-16 h-16 flex items-center justify-center">+</button>
+
     <div id="toast-container" class="fixed top-5 right-5 z-50"></div>
+
+    <!-- Add Article Modal -->
+    <div id="add-articulo-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+        <div class="relative bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-md z-50">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Añadir Artículo</h2>
+                <button id="close-add-articulo-modal" class="text-slate-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <form id="form-articulo">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="article-nombre" class="block mb-2 text-sm font-medium text-slate-300">Nombre</label>
+                        <input type="text" id="article-nombre" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+                    <div>
+                        <label for="article-categoria" class="block mb-2 text-sm font-medium text-slate-300">Categoría</label>
+                        <input list="categorias-datalist" type="text" id="article-categoria" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                        <datalist id="categorias-datalist"></datalist>
+                    </div>
+                    <div>
+                        <label for="article-unidad" class="block mb-2 text-sm font-medium text-slate-300">Unidad Mínima de Dispensa</label>
+                        <input type="number" id="article-unidad" min="1" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+                    <div>
+                        <label for="article-precio" class="block mb-2 text-sm font-medium text-slate-300">Precio por Unidad (€)</label>
+                        <input type="number" id="article-precio" min="0" step="0.01" class="bg-slate-700 border border-slate-600 text-white sm:text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                    </div>
+                </div>
+                <div class="mt-6 text-right">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Añadir Artículo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <div id="add-socio-modal-overlay" class="hidden fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
-        <div id="add-socio-modal-content" class="relative bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md z-50">
+        <div id="add-socio-modal-content" class="relative bg-slate-800 p-6 rounded-lg shadow-xl w-full max-w-md z-50">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold">Añadir Socio</h2>
                 <button id="close-add-socio-modal" class="text-gray-400 hover:text-white">
@@ -328,6 +329,8 @@
         const appContainer = document.getElementById('app-container');
         const loginForm = document.getElementById('login-form');
         const logoutButton = document.getElementById('logout-button');
+        const fabAddSocio = document.getElementById('fab-add-socio');
+        const fabAddArticulo = document.getElementById('fab-add-articulo');
 
         function showView(viewId) {
             views.forEach(view => view.classList.add('hidden'));
@@ -337,6 +340,10 @@
                 
                 const isMenuView = viewId === 'main-menu-view';
                 backToMenuBtn.classList.toggle('hidden', isMenuView);
+
+                // Control FAB visibility
+                fabAddSocio.classList.toggle('hidden', viewId !== 'socios');
+                fabAddArticulo.classList.toggle('hidden', viewId !== 'articulos-section');
                 
                 if (isMenuView) {
                     viewTitle.textContent = 'Menú Principal';
@@ -409,6 +416,46 @@
         const socioDetailsModalTitle = document.getElementById('socio-details-modal-title');
         const socioDetailsContent = document.getElementById('socio-details-content');
         const closeSocioDetailsModalBtn = document.getElementById('close-socio-details-modal');
+        const searchSociosInput = document.getElementById('search-socios');
+        const searchArticulosInput = document.getElementById('search-articulos');
+
+        searchSociosInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const socios = sociosList.querySelectorAll('.socio-card');
+            socios.forEach(socio => {
+                const nombre = socio.dataset.nombre.toLowerCase();
+                if (nombre.includes(searchTerm)) {
+                    socio.classList.remove('hidden');
+                } else {
+                    socio.classList.add('hidden');
+                }
+            });
+        });
+
+        searchArticulosInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const categorias = listaArticulosContainer.querySelectorAll('.bg-slate-800'); // Contenedor de cada categoría
+            categorias.forEach(categoria => {
+                const items = categoria.querySelectorAll('.grid');
+                let hasVisibleItem = false;
+                items.forEach(item => {
+                    const nombre = item.textContent.toLowerCase();
+                    if (nombre.includes(searchTerm)) {
+                        item.classList.remove('hidden');
+                        hasVisibleItem = true;
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+                // Si ninguna tarjeta de artículo es visible en una categoría, oculta el título de la categoría
+                if (hasVisibleItem) {
+                    categoria.classList.remove('hidden');
+                } else {
+                    categoria.classList.add('hidden');
+                }
+            });
+        });
+
 
         async function showPartnerDetails(socioId, socioNombre) {
             socioDetailsModalTitle.textContent = `Historial de ${socioNombre}`;
@@ -519,43 +566,46 @@
             onSnapshot(q, (snapshot) => {
                 sociosList.innerHTML = '';
                 if (snapshot.empty) {
-                    sociosList.innerHTML = '<tr><td colspan="4" class="py-4 px-6 text-center text-gray-500">No hay socios registrados.</td></tr>';
+                    sociosList.innerHTML = '<p class="text-center text-slate-500">No hay socios registrados.</p>';
                     return;
                 }
                 snapshot.forEach(doc => {
                     const socio = doc.data();
                     const hoy = new Date();
                     let estadoFinal = socio.estado;
-                    let filaClass = '';
 
                     if (socio.estado === 'Verde' && socio.fecha_caducidad_pago && socio.fecha_caducidad_pago.toDate() < hoy) {
                         estadoFinal = 'Gris';
-                        filaClass = 'bg-yellow-900'; // Highlight expired
                     }
 
                     const statusInfo = {
-                        'Gris': { color: 'bg-gray-500', text: 'Pendiente' },
+                        'Gris': { color: 'bg-slate-500', text: 'Pendiente' },
                         'Rojo': { color: 'bg-red-500', text: 'Non Grata' },
                         'Verde': { color: 'bg-green-500', text: 'Pagado' }
                     };
                     const currentStatus = statusInfo[estadoFinal];
 
-                    const socioElement = `
-                        <tr class="${filaClass} border-b border-gray-700">
-                            <td class="py-4 px-6">${socio.nombre}</td>
-                            <td class="py-4 px-6">${socio.apellido}</td>
-                            <td class="py-4 px-6">
-                                <span class="px-2 py-1 font-semibold leading-tight text-white rounded-full ${currentStatus.color}">
+                    const socioCard = document.createElement('div');
+                    socioCard.className = 'socio-card p-4 bg-slate-800 rounded-lg flex justify-between items-center border-b border-slate-700';
+                    socioCard.dataset.id = doc.id;
+                    socioCard.dataset.nombre = `${socio.nombre} ${socio.apellido}`;
+
+
+                    socioCard.innerHTML = `
+                        <div class="flex items-center">
+                            <div>
+                                <p class="font-semibold text-white">${socio.nombre} ${socio.apellido}</p>
+                                <span class="px-2 py-1 text-xs font-semibold leading-tight text-white rounded-full ${currentStatus.color}">
                                     ${currentStatus.text}
                                 </span>
-                            </td>
-                            <td class="py-4 px-6">
-                                <button data-id="${doc.id}" data-estado="${socio.estado}" class="change-status-btn text-blue-400 hover:underline">Cambiar Estado</button>
-                                <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" data-url="${socio.url_foto_id}" class="view-details-btn text-blue-400 hover:underline ml-4">Ver Detalles</button>
-                            </td>
-                        </tr>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button data-id="${doc.id}" data-estado="${socio.estado}" class="change-status-btn text-blue-400 hover:underline">Cambiar Estado</button>
+                            <button data-id="${doc.id}" data-nombre="${socio.nombre} ${socio.apellido}" data-url="${socio.url_foto_id}" class="view-details-btn text-blue-400 hover:underline">Ver Detalles</button>
+                        </div>
                     `;
-                    sociosList.innerHTML += socioElement;
+                    sociosList.appendChild(socioCard);
                 });
             });
         }
@@ -728,7 +778,13 @@
             }
         });
 
+        fabAddSocio.addEventListener('click', () => {
+            addSocioModalOverlay.classList.remove('hidden');
+        });
+
         // --- MÓDULO DE ARTÍCULOS (STOCK) ---
+        const addArticuloModalOverlay = document.getElementById('add-articulo-modal-overlay');
+        const closeAddArticuloModalBtn = document.getElementById('close-add-articulo-modal');
         const formArticulo = document.getElementById('form-articulo');
         const listaArticulosContainer = document.getElementById('lista-articulos-container');
         const categoriasDatalist = document.getElementById('categorias-datalist');
@@ -737,6 +793,22 @@
         const loadStockForm = document.getElementById('load-stock-form');
         const cancelLoadStockBtn = document.getElementById('cancel-load-stock');
         let currentArticleForStockLoad = null;
+
+        fabAddArticulo.addEventListener('click', () => {
+            addArticuloModalOverlay.classList.remove('hidden');
+        });
+
+        closeAddArticuloModalBtn.addEventListener('click', () => {
+            addArticuloModalOverlay.classList.add('hidden');
+            formArticulo.reset();
+        });
+
+        addArticuloModalOverlay.addEventListener('click', (e) => {
+            if(e.target === addArticuloModalOverlay) {
+                addArticuloModalOverlay.classList.add('hidden');
+                formArticulo.reset();
+            }
+        });
 
         function openLoadStockModal(articleId, articleName) {
             currentArticleForStockLoad = { id: articleId, nombre: articleName };
@@ -906,6 +978,7 @@
                 });
                 showToast(`Artículo "${nombre}" añadido con éxito.`);
                 formArticulo.reset();
+                addArticuloModalOverlay.classList.add('hidden');
             } catch (error) {
                 console.error("Error adding article: ", error);
                 showToast("Hubo un error al añadir el artículo.", true);
