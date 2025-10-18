@@ -930,7 +930,7 @@
                 if (mediaStream) {
                     mediaStream.getTracks().forEach(track => track.stop());
                 }
-                mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
                 cameraFeed.srcObject = mediaStream;
                 cameraModal.classList.remove('hidden');
             } catch (err) {
@@ -995,7 +995,29 @@
         });
 
         usePhotoBtn.addEventListener('click', () => {
-            photoCanvas.toBlob((blob) => {
+            const MAX_DIMENSION = 1024;
+            let width = photoCanvas.width;
+            let height = photoCanvas.height;
+
+            if (width > height) {
+                if (width > MAX_DIMENSION) {
+                    height *= MAX_DIMENSION / width;
+                    width = MAX_DIMENSION;
+                }
+            } else {
+                if (height > MAX_DIMENSION) {
+                    width *= MAX_DIMENSION / height;
+                    height = MAX_DIMENSION;
+                }
+            }
+
+            const resizedCanvas = document.createElement('canvas');
+            resizedCanvas.width = width;
+            resizedCanvas.height = height;
+            const ctx = resizedCanvas.getContext('2d');
+            ctx.drawImage(photoCanvas, 0, 0, width, height);
+
+            resizedCanvas.toBlob((blob) => {
                 capturedImageFile = new File([blob], 'id_photo.jpg', { type: 'image/jpeg' });
 
                 // Display in the form's preview area
@@ -1008,7 +1030,7 @@
                 socioIdPhotoInput.value = '';
 
                 stopCamera();
-            }, 'image/jpeg', 0.9);
+            }, 'image/jpeg', 0.8);
         });
 
         const uploadFileLink = document.getElementById('upload-file-link');
